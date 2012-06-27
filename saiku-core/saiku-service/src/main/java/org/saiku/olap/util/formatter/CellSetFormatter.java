@@ -479,10 +479,17 @@ public class CellSetFormatter implements ICellSetFormatter {
 							parent = parent.getParentMember();
 						}
 						final MemberCell pInfo = new MemberCell();
-						pInfo.setRawValue(parent.getCaption());
-						pInfo.setFormattedValue(parent.getCaption()); // First try to get a formatted value
-						pInfo.setParentDimension(parent.getDimension().getName());
-						pInfo.setUniquename(parent.getUniqueName());
+						if(parent != null){
+							pInfo.setRawValue(parent.getCaption());
+							pInfo.setFormattedValue(parent.getCaption()); // First try to get a formatted value
+							pInfo.setParentDimension(parent.getDimension().getName());
+							pInfo.setUniquename(parent.getUniqueName());
+						}else{ // In case parent is null, leave field is blank
+							pInfo.setRawValue("");
+							pInfo.setFormattedValue("");
+							pInfo.setParentDimension("");
+							pInfo.setUniquename("");
+						}
 						matrix.set(x_parent, y_parent, pInfo);
 						if (isColumns) {
 							y_parent--;
