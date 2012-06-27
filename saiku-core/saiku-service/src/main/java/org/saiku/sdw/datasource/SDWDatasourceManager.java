@@ -104,8 +104,8 @@ public class SDWDatasourceManager implements IDatasourceManager{
 										 buffer.append(connection.getUrl());
 										 
 										 //Add mondrian schema for each connection
-										 buffer.append(";CatalogContent="+mondrianSchemaXML);
-										 buffer.append(";JdbcDrivers=");
+										 buffer.append(";CatalogContent=\"" + mondrianSchemaXML.replaceAll("\"", "\"\""));
+										 buffer.append("\";JdbcDrivers=");
 										 buffer.append(connection.getDriver());
 											
 										 props.setProperty(ISaikuConnection.URL_KEY, buffer.toString());
