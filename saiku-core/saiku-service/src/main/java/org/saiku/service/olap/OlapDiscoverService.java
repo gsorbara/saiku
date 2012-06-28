@@ -150,6 +150,15 @@ public class OlapDiscoverService implements Serializable {
 		}
 	}
 	
+	public List<SaikuMember> getLevelMembers(SaikuCube cube, String dimensionName, String hierarchyName, String levelName, String properties) {
+		try {
+			return  metaExplorer.getAllMembers(cube, dimensionName, hierarchyName, levelName, properties);
+		} catch (SaikuOlapException e) {
+			throw new SaikuServiceException("Cannot get all members for cube ( " + cube 
+					+ " ) dimension ( " + dimensionName + " ) hierarchy ( " + hierarchyName + " ) properties ( " + properties + ")", e);
+		}
+	}
+	
 	public List<SaikuMember> getMeasures(SaikuCube cube) {
 		try {
 			return metaExplorer.getAllMeasures(cube);

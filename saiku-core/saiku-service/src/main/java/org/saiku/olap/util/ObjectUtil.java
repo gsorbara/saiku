@@ -29,6 +29,8 @@ import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.NamedList;
+import org.olap4j.metadata.Property.StandardMemberProperty;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
@@ -38,6 +40,7 @@ import org.saiku.olap.dto.SaikuDimensionSelection;
 import org.saiku.olap.dto.SaikuHierarchy;
 import org.saiku.olap.dto.SaikuLevel;
 import org.saiku.olap.dto.SaikuMember;
+import org.saiku.olap.dto.SaikuProperty;
 import org.saiku.olap.dto.SaikuQuery;
 import org.saiku.olap.dto.SaikuSelection;
 import org.saiku.olap.dto.SaikuSelection.Type;
@@ -137,6 +140,15 @@ public class ObjectUtil {
 
 	}
 	
+	public static List<SaikuMember> convertMembers(List<Member> members, String properties) {
+		List<SaikuMember> memberList= new ArrayList<SaikuMember>();
+		for (Member l : members) {
+			memberList.add(convert(l, properties));
+		}
+		return memberList;
+
+	}
+	
 	public static List<SaikuSelection> convertSelections(List<Selection> selections) {
 		List<SaikuSelection> selectionList= new ArrayList<SaikuSelection>();
 		for (Selection sel : selections) {
@@ -207,6 +219,68 @@ public class ObjectUtil {
 					m.getLevel().getUniqueName(),
 					memberKey,
 					childMemberCount);
+		
+	}
+	
+	public static SaikuMember convert(Member m, String properties) {		
+		
+		List<SaikuProperty> prop = new ArrayList<SaikuProperty>();	
+		String memberKey = "";
+		int childMemberCount = 0;
+		try {
+			Object memberKeyObj = m.getPropertyValue(Property.StandardMemberProperty.MEMBER_KEY);
+			memberKey = (memberKeyObj != null ? memberKeyObj.toString() : null);			
+			childMemberCount = m.getChildMemberCount();
+			
+			List<String> sPropKeys = new ArrayList<String>();
+			sPropKeys.add("$name");
+			StandardMemberProperty sProps[]  = Property.StandardMemberProperty.values();
+			for(StandardMemberProperty s : sProps)
+				sPropKeys.add(s.getName());
+			
+			NamedList<Property> ps = m.getProperties();								
+			if(ps != null){
+				if(!"all".equalsIgnoreCase(properties)){
+					String propertiesSelectList[] = properties.split(",");
+					for(String propertiesSelect : propertiesSelectList){
+						Property p = ps.get(propertiesSelect);	
+						if(p != null){
+							if(!sPropKeys.contains(p.getName())){
+								if(p.getUniqueName().equals(propertiesSelect) || p.getName().equals(propertiesSelect) ){
+									prop.add(new SaikuProperty(
+													p.getName() , 
+													p.getCaption(), 
+													m.getPropertyFormattedValue(p)));
+								}
+							}
+						}		
+					}								
+				}else{					
+					for(Property p : ps){
+						if(!sPropKeys.contains(p.getName()))
+							prop.add(new SaikuProperty(
+											p.getName() , 
+											p.getCaption(), 
+											m.getPropertyValue(p)+"" ));
+					}
+				}
+			}					
+			
+		} catch (Exception e) {
+		//ignore
+		}
+		
+		return new SaikuMember(
+				m.getName(), 
+				m.getUniqueName(), 
+				m.getCaption(), 
+				m.getDescription(),
+				m.getDimension().getUniqueName(),
+				m.getHierarchy().getUniqueName(),
+				m.getLevel().getUniqueName(),
+				memberKey,
+				childMemberCount,
+				prop);
 		
 	}
 

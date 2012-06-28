@@ -329,6 +329,42 @@ public class OlapMetaExplorer {
 		return new ArrayList<SaikuMember>();
 
 	}
+	
+	public List<SaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level, String properties) throws SaikuOlapException {
+		try {
+			Cube nativeCube = getNativeCube(cube);
+			Dimension dim = nativeCube.getDimensions().get(dimension);
+			if (dim != null) {
+				Hierarchy h = dim.getHierarchies().get(hierarchy);
+				if (h == null) {
+					for (Hierarchy hlist : dim.getHierarchies()) {
+						if (hlist.getUniqueName().equals(hierarchy) || hlist.getName().equals(hierarchy)) {
+							h = hlist;
+						}
+					}
+				}
+
+				if (h!= null) {
+					Level l = h.getLevels().get(level);
+					if (l == null) {
+						for (Level lvl : h.getLevels()) {
+							if (lvl.getUniqueName().equals(level) || lvl.getName().equals(level)) {
+								return (ObjectUtil.convertMembers(lvl.getMembers(), properties));
+							}
+						}
+					} else {
+						return (ObjectUtil.convertMembers(l.getMembers(), properties));
+					}
+
+				}
+			}
+		} catch (OlapException e) {
+			throw new SaikuOlapException("Cannot get all members",e);
+		}
+
+		return new ArrayList<SaikuMember>();
+
+	}
 
 	public List<SaikuMember> getMemberChildren(SaikuCube cube, String uniqueMemberName) throws SaikuOlapException {
 		List<SaikuMember> members = new ArrayList<SaikuMember>();

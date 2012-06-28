@@ -28,6 +28,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import org.saiku.olap.dto.SaikuConnection;
 import org.saiku.olap.dto.SaikuCube;
@@ -197,14 +198,24 @@ public class OlapDiscoverResource implements Serializable {
 			@PathParam("cube") String cubeName, 
 			@PathParam("dimension") String dimensionName, 
 			@PathParam("hierarchy") String hierarchyName,
-			@PathParam("level") String levelName)
+			@PathParam("level") String levelName,
+			@QueryParam("properties") String properties)
 	{
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
 		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
 		try {
-			return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName);
+			if("null".equals(properties)){
+				return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName);
+			}else{
+				if("".equals(properties)){
+					throw new Exception("properties Argument is needed");
+				}else{					
+					return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName, properties);
+				}
+				
+			}
 		} catch (Exception e) {
 			log.error(this.getClass().getName(),e);
 		}

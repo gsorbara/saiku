@@ -36,6 +36,40 @@ import org.saiku.service.datasource.IDatasourceManager;
  */
 public class OlapMetaExplorerTest extends ServiceTest{
 
+	/**
+	 * dimension name
+	 */
+	private final String dimension = "Area";
+	
+	/**
+	 * hierarchy name
+	 */
+	private final String hierarchy = "Area.Area";
+	
+	/**
+	 * level name
+	 */
+	private final String level = "Area";
+	
+	/**
+	 * level name
+	 */
+	private final String allProperty = "ALL";
+	
+	/**
+	 * level name
+	 */
+	private final String singleProperty = "iso2";
+	
+	/**
+	 * level name
+	 */
+	private final String multiProperty = "iso3,iso2";
+	
+	/**
+     * Test to retrieve all the properties from a Level member.
+     */
+	
 	@BeforeClass
 	public static void loadParams(){
 		OlapTestParams.setupParams(OlapTestParams.FOODMART_DATA);
@@ -444,6 +478,99 @@ public class OlapMetaExplorerTest extends ServiceTest{
     	
     }
     
+    @Test
+    public void testGetMemberAllProperty() throws SaikuOlapException{
+    	
+		List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
+		for (SaikuCube saikuCube : cubes) {
+			if(OlapTestParams.cubeName.equals(saikuCube.getName())){	    			
+    			List<SaikuMember> members = olapMetaExplorer.getAllMembers(saikuCube, dimension, 
+    					hierarchy, level, allProperty);
+    			
+    			assertNotNull(members);
+    			for(SaikuMember m : members){
+    				assertNotNull(m);
+    				assertTrue(m.getProperties().size() > 1);    				
+    				break;
+    			}
+    			
+    	        break;
+    		}
+		}    	
+    }
+    
+    /**
+     * Test to retrieve single property from a Level member.
+     */
+    @Test
+    public void testGetMemberSingleProperty() throws SaikuOlapException{
+    	
+		List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
+		for (SaikuCube saikuCube : cubes) {
+			if(OlapTestParams.cubeName.equals(saikuCube.getName())){	    			
+    			List<SaikuMember> members = olapMetaExplorer.getAllMembers(saikuCube, dimension, 
+    					hierarchy, level, singleProperty);
+    			
+    			assertNotNull(members);
+    			for(SaikuMember m : members){
+    				assertNotNull(m);
+    				assertTrue(m.getProperties().size() == 1);    				
+    				break;
+    			}
+    			
+    	        break;
+    		}
+		}    	
+    }
+    
+    /**
+     * Test to retrieve multi property from a Level member.
+     */
+    @Test
+    public void testGetMemberMultiProperty() throws SaikuOlapException{
+    	
+		List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
+		for (SaikuCube saikuCube : cubes) {
+			if(OlapTestParams.cubeName.equals(saikuCube.getName())){	    			
+    			List<SaikuMember> members = olapMetaExplorer.getAllMembers(saikuCube, dimension, 
+    					hierarchy, level, multiProperty);
+    			
+    			assertNotNull(members);
+    			for(SaikuMember m : members){
+    				assertNotNull(m);
+    				assertTrue(m.getProperties().size() > 1);    				
+    				break;
+    			}
+    			
+    	        break;
+    		}
+		}    	
+    }
+    
+    /**
+     * Test to retrieve by property name that not exist in Level and should return property size is 0.
+     */
+    @Test
+    public void testGetMemberProperty() throws SaikuOlapException{
+    	
+		List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
+		for (SaikuCube saikuCube : cubes) {
+			if(OlapTestParams.cubeName.equals(saikuCube.getName())){	    			
+    			List<SaikuMember> members = olapMetaExplorer.getAllMembers(saikuCube, dimension, 
+    					hierarchy, level, "test1234");
+    			
+    			assertNotNull(members);
+    			for(SaikuMember m : members){
+    				assertNotNull(m);
+    				assertTrue(m.getProperties().size() == 0);    	
+    				
+    				break;
+    			}
+    			
+    	        break;
+    		}
+		}    	
+    }    
     
     public static void main(String[] args) {
     	AbstractServiceUtils ast = new AbstractServiceUtils();
