@@ -180,4 +180,9 @@ public class ClassPathResourceDatasourceManager implements IDatasourceManager {
 	public SaikuDatasource getDatasource(String datasourceName) {
 		return datasources.get(datasourceName);
 	}
+
+
+	public void loadByName(String name) {
+		// TODO Auto-generated method stub		
+	}
 }

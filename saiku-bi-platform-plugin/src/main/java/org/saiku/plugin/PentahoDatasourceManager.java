@@ -149,6 +149,12 @@ public class PentahoDatasourceManager implements IDatasourceManager {
 	}
 
 
+	public void loadByName(String name) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 
 
 }

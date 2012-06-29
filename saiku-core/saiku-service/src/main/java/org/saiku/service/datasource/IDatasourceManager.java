@@ -28,6 +28,8 @@ public interface IDatasourceManager {
 	
 	public void load();
 	
+	public void loadByName(String name);
+	
 	public SaikuDatasource addDatasource(SaikuDatasource datasource);
 	
 	public SaikuDatasource setDatasource(SaikuDatasource datasource);

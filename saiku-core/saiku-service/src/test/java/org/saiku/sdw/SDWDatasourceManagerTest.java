@@ -166,4 +166,18 @@ public class SDWDatasourceManagerTest {
 		
 	}
 	
+	/**
+	 * This method attempts to test remove add new datasources.
+	 */
+
+	@Test
+	public void testReloadDatasource(){
+		System.out.println("testing reload datasources");
+		
+		ds.loadByName("Faostat Production - en");		
+		SaikuDatasource datasource = ds.getDatasource("Faostat Production - en");		
+		Assert.assertNotNull(datasource);
+		
+	}
+	
 }

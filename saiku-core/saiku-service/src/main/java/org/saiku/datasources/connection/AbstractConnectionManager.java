@@ -81,14 +81,19 @@ public abstract class AbstractConnectionManager implements IConnectionManager {
 	public void refreshAllConnections() {
 		ds.load();
 		for (String name : ds.getDatasources().keySet()) {
-			refreshConnection(name);
+			reloadDatasource(name);
 		}
 	}
-
-	public void refreshConnection(String name) {
+	
+	private void reloadDatasource(String name) {
 		SaikuDatasource datasource = ds.getDatasource(name);
 		datasource = preProcess(datasource);
 		refreshInternalConnection(name, datasource);
+	}
+
+	public void refreshConnection(String name) {
+		ds.loadByName(name);
+		reloadDatasource(name);
 	}
 
 	public Map<String, ISaikuConnection> getAllConnections() {
