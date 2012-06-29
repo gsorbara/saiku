@@ -25,6 +25,7 @@ import java.util.List;
 import org.olap4j.OlapConnection;
 import org.olap4j.metadata.Cube;
 import org.saiku.olap.discover.OlapMetaExplorer;
+import org.saiku.olap.dto.PropertySaikuMember;
 import org.saiku.olap.dto.SaikuConnection;
 import org.saiku.olap.dto.SaikuCube;
 import org.saiku.olap.dto.SaikuDimension;
@@ -150,7 +151,7 @@ public class OlapDiscoverService implements Serializable {
 		}
 	}
 	
-	public List<SaikuMember> getLevelMembers(SaikuCube cube, String dimensionName, String hierarchyName, String levelName, String properties) {
+	public List<PropertySaikuMember> getLevelMembers(SaikuCube cube, String dimensionName, String hierarchyName, String levelName, String properties) {
 		try {
 			return  metaExplorer.getAllMembers(cube, dimensionName, hierarchyName, levelName, properties);
 		} catch (SaikuOlapException e) {

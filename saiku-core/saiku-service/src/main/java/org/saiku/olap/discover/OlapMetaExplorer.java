@@ -40,6 +40,7 @@ import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
 import org.saiku.datasources.connection.IConnectionManager;
+import org.saiku.olap.dto.PropertySaikuMember;
 import org.saiku.olap.dto.SaikuCatalog;
 import org.saiku.olap.dto.SaikuConnection;
 import org.saiku.olap.dto.SaikuCube;
@@ -330,7 +331,7 @@ public class OlapMetaExplorer {
 
 	}
 	
-	public List<SaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level, String properties) throws SaikuOlapException {
+	public List<PropertySaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level, String properties) throws SaikuOlapException {
 		try {
 			Cube nativeCube = getNativeCube(cube);
 			Dimension dim = nativeCube.getDimensions().get(dimension);
@@ -362,7 +363,7 @@ public class OlapMetaExplorer {
 			throw new SaikuOlapException("Cannot get all members",e);
 		}
 
-		return new ArrayList<SaikuMember>();
+		return new ArrayList<PropertySaikuMember>();
 
 	}
 

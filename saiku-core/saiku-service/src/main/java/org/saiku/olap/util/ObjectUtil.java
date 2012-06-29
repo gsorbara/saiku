@@ -40,6 +40,7 @@ import org.saiku.olap.dto.SaikuDimensionSelection;
 import org.saiku.olap.dto.SaikuHierarchy;
 import org.saiku.olap.dto.SaikuLevel;
 import org.saiku.olap.dto.SaikuMember;
+import org.saiku.olap.dto.PropertySaikuMember;
 import org.saiku.olap.dto.SaikuProperty;
 import org.saiku.olap.dto.SaikuQuery;
 import org.saiku.olap.dto.SaikuSelection;
@@ -140,8 +141,8 @@ public class ObjectUtil {
 
 	}
 	
-	public static List<SaikuMember> convertMembers(List<Member> members, String properties) {
-		List<SaikuMember> memberList= new ArrayList<SaikuMember>();
+	public static List<PropertySaikuMember> convertMembers(List<Member> members, String properties) {
+		List<PropertySaikuMember> memberList= new ArrayList<PropertySaikuMember>();
 		for (Member l : members) {
 			memberList.add(convert(l, properties));
 		}
@@ -222,7 +223,7 @@ public class ObjectUtil {
 		
 	}
 	
-	public static SaikuMember convert(Member m, String properties) {		
+	public static PropertySaikuMember convert(Member m, String properties) {		
 		
 		List<SaikuProperty> prop = new ArrayList<SaikuProperty>();	
 		String memberKey = "";
@@ -270,7 +271,7 @@ public class ObjectUtil {
 		//ignore
 		}
 		
-		return new SaikuMember(
+		return new PropertySaikuMember(
 				m.getName(), 
 				m.getUniqueName(), 
 				m.getCaption(), 

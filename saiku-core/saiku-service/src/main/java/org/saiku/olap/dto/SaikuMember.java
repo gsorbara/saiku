@@ -31,7 +31,7 @@ public class SaikuMember extends AbstractSaikuObject {
 	private boolean visible;
 	
 	//KB: Add MEMBER_KEY property:
-	private List<SaikuProperty> properties;
+	//private List<PropertySaikuMember> properties;
 	//Add memberKey:
 	private String memberKey;
 	//KB Add ChildMemberCount:
@@ -72,19 +72,6 @@ public class SaikuMember extends AbstractSaikuObject {
 		this.childMemberCount = childMemberCount;
 	}
 	
-	public SaikuMember(String name, String uniqueName, String caption, String description, String dimensionUniqueName, String hierarchyUniqueName, String levelUniqueName,String memberKey, int childMemberCount, List<SaikuProperty> properties) {
-		super(uniqueName,name);
-		this.caption = caption;
-		this.description = description;
-		this.dimensionUniqueName = dimensionUniqueName;
-		this.levelUniqueName = levelUniqueName;
-		this.hierarchyUniqueName = hierarchyUniqueName;
-		this.visible = true;
-		this.memberKey = memberKey;
-		this.childMemberCount = childMemberCount;
-		this.properties = properties;
-	}
-	
 	public String getCaption() {
 		return caption;
 	}
@@ -120,11 +107,4 @@ public class SaikuMember extends AbstractSaikuObject {
 	public int getChildMemberCount() {
 		return childMemberCount;
 	}	
-	public List<SaikuProperty> getProperties() {
-		return properties;
-	}
-
-	public void setProperties(List<SaikuProperty> properties) {
-		this.properties = properties;
-	}
 }

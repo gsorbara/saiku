@@ -191,7 +191,7 @@ public class OlapDiscoverResource implements Serializable {
 	@GET
 	@Produces({"application/json" })
 	@Path("/{connection}/{catalog}/{schema}/{cube}/dimensions/{dimension}/hierarchies/{hierarchy}/levels/{level}")
-	public List<SaikuMember> getLevelMembers(
+	public List<?> getLevelMembers(
 			@PathParam("connection") String connectionName, 
 			@PathParam("catalog") String catalogName, 
 			@PathParam("schema") String schemaName, 
@@ -206,15 +206,14 @@ public class OlapDiscoverResource implements Serializable {
 		}
 		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
 		try {
-			if("null".equals(properties)){
+			if(properties == null){
 				return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName);
 			}else{
 				if("".equals(properties)){
 					throw new Exception("properties Argument is needed");
 				}else{					
 					return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName, properties);
-				}
-				
+				}				
 			}
 		} catch (Exception e) {
 			log.error(this.getClass().getName(),e);
