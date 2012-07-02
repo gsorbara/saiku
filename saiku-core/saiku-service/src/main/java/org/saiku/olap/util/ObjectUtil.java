@@ -20,6 +20,8 @@
 package org.saiku.olap.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.olap4j.Axis;
@@ -243,7 +245,12 @@ public class ObjectUtil {
 			if(ps != null){
 				if(!"all".equalsIgnoreCase(properties)){
 					String propertiesSelectList[] = properties.split(",");
-					for(String propertiesSelect : propertiesSelectList){
+					HashSet<String> propHash = new HashSet<String>();
+					propHash.addAll(Arrays.asList(propertiesSelectList));
+					ArrayList<String> propKeys = new ArrayList<String>();
+					propKeys.addAll(propHash);
+					
+					for(String propertiesSelect : propHash){
 						Property p = ps.get(propertiesSelect);	
 						if(p != null){
 							if(!sPropKeys.contains(p.getName())){
