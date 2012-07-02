@@ -115,6 +115,7 @@ public class SDWDatasourceManager implements IDatasourceManager{
 										 props.setProperty("connectionname", connectionname);
 										 props.setProperty("catalogName", catalogName);
 										 props.setProperty("schemaName", schemaName);
+										 props.setProperty("schemaLanguage", schemaLanguage.getLanguage());
 										 
 										 //String datasourceName = workspaceName + " | " + catalogName + " | " + schemaName + " | " + connectionname;
 										 SaikuDatasource ds = new SaikuDatasource(datasourceName,SaikuDatasource.Type.OLAP,props);
@@ -172,50 +173,54 @@ public class SDWDatasourceManager implements IDatasourceManager{
 			String catalogName = ds.getProperties() == null ? "" : (String) ds.getProperties().get("catalogName");
 			String schemaName = ds.getProperties() == null ? "" : (String) ds.getProperties().get("schemaName");
 			String datasourceName = ds.getProperties() == null ? "" : (String) ds.getProperties().get(ISaikuConnection.NAME_KEY);  
-			
+			String sLanguage =  ds.getProperties() == null ? "" : (String) ds.getProperties().get("schemaLanguage");
 			datasources.remove(datasourceName);
 			
-			Connection connection = sdwMetadataClient.retrieveConnection(workspaceName,connectionname );			
-			String mondrianSchemaXML = sdwMetadataClient.retrieveMondrianSchemasXML(workspaceName, catalogName, schemaName);
-			if(mondrianSchemaXML != null && connection != null){				
+			Connection connection = sdwMetadataClient.retrieveConnection(workspaceName,connectionname );		
+			
+			SchemaLanguages schemaLanguages = sdwMetadataClient.retrieveSchemaLanguages(workspaceName, catalogName, schemaName);
+			for(SchemaLanguage schemaLanguage : schemaLanguages.getSchemaLanguages()) {
+				if(!sLanguage.equals(schemaLanguage.getLanguage()))
+					continue;
 				
-				 log.debug("reload datasource for workspaceName="+workspaceName + ", catalogName=" + catalogName + ", schemaName=" + schemaName);
-								 
-				 //Add the database connection info.
-				 Properties props = new Properties();
-				 props.setProperty(ISaikuConnection.NAME_KEY, datasourceName);
-				 props.setProperty("type", ISaikuConnection.OLAP_DATASOURCE);
-				 props.setProperty(ISaikuConnection.USERNAME_KEY, connection.getUsername());
-				 props.setProperty(ISaikuConnection.PASSWORD_KEY, connection.getPassword());
-				 props.setProperty(ISaikuConnection.DRIVER_KEY, "mondrian.olap4j.MondrianOlap4jDriver");
-				 
-				 //Add the database URL		
-				 StringBuffer buffer = new StringBuffer();
-				 buffer.append("jdbc:mondrian:Jdbc=");
-				 buffer.append(connection.getUrl());
-				 
-				 //Add mondrian schema for each connection
-				 buffer.append(";CatalogContent=\"" + mondrianSchemaXML.replaceAll("\"", "\"\""));
-				 buffer.append("\";JdbcDrivers=");
-				 buffer.append(connection.getDriver());
+				String mondrianSchemaXML = schemaLanguage.getXml();
+				if(mondrianSchemaXML != null && connection != null){				
 					
-				 props.setProperty(ISaikuConnection.URL_KEY, buffer.toString());
+					 log.debug("reload datasource for workspaceName="+workspaceName + ", catalogName=" + catalogName + ", schemaName=" + schemaName);
+									 
+					 //Add the database connection info.
+					 Properties props = new Properties();
+					 props.setProperty(ISaikuConnection.NAME_KEY, datasourceName);
+					 props.setProperty("type", ISaikuConnection.OLAP_DATASOURCE);
+					 props.setProperty(ISaikuConnection.USERNAME_KEY, connection.getUsername());
+					 props.setProperty(ISaikuConnection.PASSWORD_KEY, connection.getPassword());
+					 props.setProperty(ISaikuConnection.DRIVER_KEY, "mondrian.olap4j.MondrianOlap4jDriver");
+					 
+					 //Add the database URL		
+					 StringBuffer buffer = new StringBuffer();
+					 buffer.append("jdbc:mondrian:Jdbc=");
+					 buffer.append(connection.getUrl());
+					 
+					 //Add mondrian schema for each connection
+					 buffer.append(";CatalogContent=\"" + mondrianSchemaXML.replaceAll("\"", "\"\""));
+					 buffer.append("\";JdbcDrivers=");
+					 buffer.append(connection.getDriver());
+						
+					 props.setProperty(ISaikuConnection.URL_KEY, buffer.toString());
 
-				 props.setProperty("workspaceName", workspaceName);
-				 props.setProperty("connectionname", connectionname);
-				 props.setProperty("catalogName", catalogName);
-				 props.setProperty("schemaName", schemaName);
-				 
-				 //String datasourceName = workspaceName + " | " + catalogName + " | " + schemaName + " | " + connectionname;
-				 ds = new SaikuDatasource(datasourceName,SaikuDatasource.Type.OLAP,props);
-				 datasources.put(datasourceName, ds);
-				 
+					 props.setProperty("workspaceName", workspaceName);
+					 props.setProperty("connectionname", connectionname);
+					 props.setProperty("catalogName", catalogName);
+					 props.setProperty("schemaName", schemaName);
+					 props.setProperty("schemaLanguage", sLanguage);
+					 
+					 //String datasourceName = workspaceName + " | " + catalogName + " | " + schemaName + " | " + connectionname;
+					 ds = new SaikuDatasource(datasourceName,SaikuDatasource.Type.OLAP,props);
+					 datasources.put(datasourceName, ds);
+					 
+				}
 			}
-			
-			
 		}
-		
-		
 	}
 
 	public SaikuDatasource addDatasource(SaikuDatasource datasource) {

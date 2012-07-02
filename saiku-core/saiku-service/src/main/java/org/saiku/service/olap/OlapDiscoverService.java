@@ -75,7 +75,7 @@ public class OlapDiscoverService implements Serializable {
 		try {
 			datasourceService.getConnectionManager().refreshConnection(name);
 		} catch (Exception e) {
-			throw new SaikuServiceException("Cannot refresh all connections", e);
+			throw new SaikuServiceException("Cannot refresh Connection name " + name, e);
 		}
 	}
 	
