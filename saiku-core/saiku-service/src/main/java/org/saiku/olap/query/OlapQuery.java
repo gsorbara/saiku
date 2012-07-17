@@ -28,9 +28,12 @@ import java.util.Properties;
 import org.olap4j.Axis;
 import org.olap4j.Axis.Standard;
 import org.olap4j.CellSet;
+import org.olap4j.OlapConnection;
+import org.olap4j.OlapStatement;
 import org.olap4j.Scenario;
 import org.olap4j.impl.IdentifierParser;
 import org.olap4j.mdx.ParseTreeWriter;
+import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
@@ -61,6 +64,9 @@ public class OlapQuery implements IQuery {
 	
 	private SaikuTag tag = null;
 
+	private OlapStatement statement = null;
+
+	private OlapConnection connection;
 	
 	public OlapQuery(Query query, SaikuCube cube, boolean applyDefaultProperties) {
 		this.query = query;
@@ -72,6 +78,11 @@ public class OlapQuery implements IQuery {
 
 	public OlapQuery(Query query, SaikuCube cube) {
 		this(query,cube,true);
+	}
+	
+	public OlapQuery(Query query, OlapConnection connection, SaikuCube cube) {
+		this(query,cube,true);
+		this.connection = connection;
 	}
 	
 	public void swapAxes() {
@@ -185,18 +196,37 @@ public class OlapQuery implements IQuery {
     		}
     	}
     	
-        Query mdx = this.query;
-//        mdx.validate();
-        StringWriter writer = new StringWriter();
-        mdx.getSelect().unparse(new ParseTreeWriter(new PrintWriter(writer)));
-        log.debug("Executing query (" + this.getName() + ") :\n" + writer.toString());
-        CellSet cellSet = mdx.execute();
+    	//Comment for SDW-209
+//        Query mdx = this.query;
+////        mdx.validate();
+//        StringWriter writer = new StringWriter();
+//        mdx.getSelect().unparse(new ParseTreeWriter(new PrintWriter(writer)));
+//        log.debug("Executing query (" + this.getName() + ") :\n" + writer.toString());
+//        CellSet cellSet = mdx.execute();
+//    	if (scenario != null && query.getDimension(SCENARIO) != null) {
+//    		QueryDimension dimension = query.getDimension(SCENARIO);
+//    		dimension.getInclusions().clear();
+//    		moveDimension(dimension, null);
+//    	}
+
+    	//SDW-209 for create statement 
+    	String mdxString = getMdx();
+    	log.debug("Executing query (" + this.getName() + ") :\n" + mdxString);
+    	final Catalog catalog = query.getCube().getSchema().getCatalog();
+        this.connection.setCatalog(catalog.getName());
+		OlapStatement stmt = connection.createStatement();
+		this.statement = stmt;
+		CellSet cellSet = stmt.executeOlapQuery(mdxString);
+		if (this.statement != null) {
+			this.statement.close();
+		}
+		this.statement = null;
     	if (scenario != null && query.getDimension(SCENARIO) != null) {
     		QueryDimension dimension = query.getDimension(SCENARIO);
     		dimension.getInclusions().clear();
     		moveDimension(dimension, null);
     	}
-
+    	
         return cellSet;
     }
     
@@ -285,6 +315,14 @@ public class OlapQuery implements IQuery {
 
 	public void removeTag() {
 		tag = null;		
+	}
+
+	public void cancel() throws Exception {
+		if (this.statement != null && !this.statement.isClosed()) {
+			statement.cancel();
+			statement.close();
+		}
+		this.statement = null;
 	}
 
 }

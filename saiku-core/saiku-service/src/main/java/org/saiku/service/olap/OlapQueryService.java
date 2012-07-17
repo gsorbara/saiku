@@ -103,8 +103,9 @@ public class OlapQueryService implements Serializable {
 	public SaikuQuery createNewOlapQuery(String queryName, SaikuCube cube) {
 		try {
 			Cube cub = olapDiscoverService.getNativeCube(cube);
+			OlapConnection con = olapDiscoverService.getNativeConnection(cube.getConnectionName());
 			if (cub != null) {
-				IQuery query = new OlapQuery(new Query(queryName, cub),cube);
+				IQuery query = new OlapQuery(new Query(queryName, cub), con, cube);
 				queries.put(queryName, query);
 				return ObjectUtil.convert(query);
 			}
@@ -737,4 +738,14 @@ public class OlapQueryService implements Serializable {
 		return query;
 	}
 
+	//SDW-209
+	public void cancel(String queryName) {
+		try {
+			IQuery q = getIQuery(queryName);
+			q.cancel();
+		} catch (Exception e) {
+			throw new SaikuServiceException("Error cancelling query: " + queryName,e);
+		}
+	}
+	
 }

@@ -64,5 +64,6 @@ public interface IQuery {
 	public void setTag(SaikuTag tag);
 	public SaikuTag getTag();
 	public void removeTag();
-
+	//SDW-209
+	public void cancel() throws Exception;
 }

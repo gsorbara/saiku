@@ -1007,5 +1007,23 @@ public class QueryResource {
 		}
 		olapQueryService.clearSort(queryName, axisName);
 	}
+	
+	//SDW-209
+	@GET
+	@Path("/{queryname}/cancel")
+	public Status cancel(@PathParam("queryname") String queryName){
+		if (log.isDebugEnabled()) {
+			log.debug("TRACK\t"  + "\t/query/" + queryName + "/result\tCANCEL");
+		}
+		try {
+
+			olapQueryService.cancel(queryName);
+			return Response.Status.OK;
+		}
+		catch (Exception e) {
+			log.error("Cannot execute query (" + queryName + ")",e);
+			return Response.Status.INTERNAL_SERVER_ERROR;
+		}
+	}
 
 }

@@ -228,4 +228,8 @@ public class MdxQuery implements IQuery {
 	public void removeTag() {
 	}
 
+	public void cancel() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 }

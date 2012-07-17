@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.saiku.olap.dto.SaikuConnection;
 import org.saiku.olap.dto.SaikuCube;
@@ -32,6 +33,7 @@ public class OlapQueryServiceTest extends ServiceTest{
 	
 	@BeforeClass
 	public static void loadParams(){
+		
 		OlapTestParams.setupParams(OlapTestParams.FOODMART_DATA);
 	}
 	
@@ -109,8 +111,31 @@ public class OlapQueryServiceTest extends ServiceTest{
 		
 		assertNotNull(query);
 		assertEquals(OlapTestParams.queryName, query.getName());
+		System.out.println("Query "+query.getName() + " was created");
+	}
+	
+	/**
+	 * This method attempt to cancel a new Olap query.
+	 */
+	@Test
+	public final void testCancelQuery(){
+		System.out.println("Start testing cancel new query");
+		
+		//Create new olap query for testing
+		SaikuQuery query = olapQueryService.createNewOlapQuery(OlapTestParams.queryName, getCube());
+		assertNotNull(query);
+		System.out.println("Query "+query + " was created");		
+		try{
+			olapQueryService.cancel(OlapTestParams.queryName);
+			System.out.println("Query "+query.getName() + " was canceled");
+		}catch (Exception e) {
+			Assert.fail();
+			System.out.println("Query "+query.getName() + " was failed to cancel");
+		}
 		
 	}
+	
+	
 	
 	/**
 	 * This method attempt execute the MDX query and get the result from resultSet.
