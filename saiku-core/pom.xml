@@ -1,32 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <parent>
-    <groupId>org.fao</groupId>
-    <artifactId>fao-superpom</artifactId>
-    <version>0.1.7</version>
-  </parent>
-
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.saiku</groupId>
 	<artifactId>saiku-core</artifactId>
 	<packaging>pom</packaging>
 	<name>saiku - core libraries</name>
     <version>2.3-SNAPSHOT</version>
-
-  <distributionManagement>
-  <repository>
-  <id>artifactory.fao.org</id>
-  <name>${dm-fao.rel-name}</name>
-  <url>${dm-fao.rel-url}</url>
-  </repository>
-  <snapshotRepository>
-  <id>artifactory.fao.org</id>
-  <name>${dm-fao.snap-name}</name>
-  <url>${dm-fao.snap-url}</url>
-  </snapshotRepository>
-  </distributionManagement>
-
 
 
 	<properties>
@@ -43,11 +23,6 @@
 		<module>saiku-web</module>
 	</modules>
 	<repositories>
-  <repository>
-  <id>Artifactory-FAO</id>
-  <name>Artifactory-FAO</name>
-  <url>http://artifactory.fao.org/artifactory/parents</url>
-  </repository>
 <repository>
                         <id>pentaho-third-party</id>
                         <url>http://repo.pentaho.org/artifactory/third-party/</url>
