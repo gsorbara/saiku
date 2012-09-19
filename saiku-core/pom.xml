@@ -14,14 +14,6 @@
 	<name>saiku - core libraries</name>
     <version>2.3-SNAPSHOT</version>
 
-  <repositories>
-  <repository>
-  <id>Artifactory-FAO</id>
-  <name>Artifactory-FAO</name>
-  <url>http://artifactory.fao.org/artifactory/parents</url>
-  </repository>
-  </repositories>
-
   <distributionManagement>
   <repository>
   <id>artifactory.fao.org</id>
@@ -51,6 +43,11 @@
 		<module>saiku-web</module>
 	</modules>
 	<repositories>
+  <repository>
+  <id>Artifactory-FAO</id>
+  <name>Artifactory-FAO</name>
+  <url>http://artifactory.fao.org/artifactory/parents</url>
+  </repository>
 <repository>
                         <id>pentaho-third-party</id>
                         <url>http://repo.pentaho.org/artifactory/third-party/</url>
