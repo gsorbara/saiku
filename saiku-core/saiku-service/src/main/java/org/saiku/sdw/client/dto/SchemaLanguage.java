@@ -10,6 +10,7 @@ public class SchemaLanguage {
 	private Date creationTimestamp;
 	private Date lastXmlUpdate;
 	private Date lastPublished;
+	private Boolean enabled;
 
 	public String getLanguage() {
 		return language;
@@ -59,4 +60,12 @@ public class SchemaLanguage {
 		this.lastPublished = lastPublished;
 	}
 
+	public Boolean getEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(Boolean enabled) {
+		this.enabled = enabled;
+	}
+	
 }

@@ -343,6 +343,7 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					Node language = XMLUtil.queryNode(doc, "(//SchemaLanguage/language)["+i+"]");
 					Node xml = XMLUtil.queryNode(doc, "(//SchemaLanguage/xml)["+i+"]");
 					Node fileName = XMLUtil.queryNode(doc, "(//SchemaLanguage/fileName)["+i+"]");
+					Node enabled = XMLUtil.queryNode(doc, "(//SchemaLanguage/enabled)["+i+"]");
 					
 					SchemaLanguage schemaLanguage = new SchemaLanguage();
 					if(language != null)
@@ -352,7 +353,8 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					if(fileName != null)
 						schemaLanguage.setFileName(fileName.getTextContent());
 					
-					list.add(schemaLanguage);
+					if(enabled != null && Boolean.parseBoolean(enabled.getTextContent()))					
+						list.add(schemaLanguage);
 				}
 				return schemaLanguages;
 			}
