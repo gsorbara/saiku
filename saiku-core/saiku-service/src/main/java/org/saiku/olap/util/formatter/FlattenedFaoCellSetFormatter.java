@@ -472,20 +472,16 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 					memberInfo.setParentDimension(member.getDimension().getName());
 					memberInfo.setUniquename(member.getUniqueName());
 
-					// TODO: working here
-					///////////////////////////////////////////////////////////////////////////////////////////////
-					///////////////////////////////////////////////////////////////////////////////////////////////
-					
+
+					// FOADATA special properties for dimension type.
+					//
 					Dimension dimension = member.getLevel().getHierarchy().getDimension();
-					System.out.println(">>>>>>>>>>>>>>>>>>Processing dimension.");
 					try {
 						Dimension.Type type = dimension.getDimensionType();
-						System.out.println(">>Dimension type: " + type);
 						if(type != null)
 							memberInfo.setFaoProperty("dimensionType", type.toString());
 
 						String description = dimension.getDescription();
-						System.out.println(">>Dimension description: " + description);
 						if(description != null) {
 							Matcher m = dimensionSubtypePattern.matcher(description);
 							if(m.matches())
@@ -498,14 +494,13 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 					}
 					
 					
-					System.out.println(">>>>>>>>>>>>>>>>>>Processing properties.");
+					// FOADATA special properties for uuids.
+					//
 					NamedList<Property> properties = member.getLevel().getProperties();
-					System.out.println(">>No. of properties: " + properties.size());
 					for(int j = 0; j < properties.size(); j++) {
 						
 						Property property = properties.get(j);
 						String propertyName = property.getName();
-						System.out.println(">>Analyzing property: " + propertyName);
 						
 						if(!propertyName.trim().toLowerCase().startsWith("uuid"))
 							continue;
@@ -518,10 +513,7 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 							throw new RuntimeException(e);
 						}
 						memberInfo.setFaoProperty(propertyName, val);
-						System.out.println(String.format("Added property %s with value %s", propertyName, val));
 					}
-					///////////////////////////////////////////////////////////////////////////////////////////////
-					///////////////////////////////////////////////////////////////////////////////////////////////
 
 					
 					if (y > 0) {
