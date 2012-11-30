@@ -72,6 +72,7 @@ import org.saiku.olap.util.OlapResultSetUtil;
 import org.saiku.olap.util.exception.SaikuOlapException;
 import org.saiku.olap.util.formatter.CellSetFormatter;
 import org.saiku.olap.util.formatter.FlattenedCellSetFormatter;
+import org.saiku.olap.util.formatter.FlattenedFaoCellSetFormatter;
 import org.saiku.olap.util.formatter.HierarchicalCellSetFormatter;
 import org.saiku.olap.util.formatter.ICellSetFormatter;
 import org.saiku.service.util.OlapUtil;
@@ -168,6 +169,9 @@ public class OlapQueryService implements Serializable {
 		}
 		else if (formatter.equals("flattened")) {
 			return execute(queryName, new FlattenedCellSetFormatter());
+		}
+		else if (formatter.equals("flattened_fao")) {
+			return execute(queryName, new FlattenedFaoCellSetFormatter());
 		}
 		return execute(queryName, new HierarchicalCellSetFormatter());
 	}
@@ -653,9 +657,14 @@ public class OlapQueryService implements Serializable {
 		formatter = formatter == null ? "" : formatter.toLowerCase();
 		if (formatter.equals("flat")) {
 			return getExport(queryName, type, new CellSetFormatter());			
-		}else if (formatter.equals("flattened")) {
+		}
+		else if (formatter.equals("flattened")) {
 			return getExport(queryName, type, new FlattenedCellSetFormatter());
-		} else if (formatter.equals("hierarchical")) {
+		} 
+		else if (formatter.equals("flattened_fao")) {
+			return getExport(queryName, type, new FlattenedCellSetFormatter());
+		} 
+		else if (formatter.equals("hierarchical")) {
 			return getExport(queryName, type, new HierarchicalCellSetFormatter());
 		}
 

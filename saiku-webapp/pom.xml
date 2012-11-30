@@ -16,13 +16,42 @@
 		<spring.version>3.0.3.RELEASE</spring.version>
 		<spring.security.version>3.0.3.RELEASE</spring.security.version>
 		<spring.security.tiger.version>2.0.6.RELEASE</spring.security.tiger.version>
-    <enunciate.version>1.23</enunciate.version>
-    <jersey.version>1.8</jersey.version>
+	    <enunciate.version>1.23</enunciate.version>
+	    <jersey.version>1.8</jersey.version>
 	</properties>
 
+	<profiles>
+		<profile>
+			<id>env-dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+				<property>
+					<name>env</name>
+					<value>env-dev</value>
+				</property>
+			</activation>
+			<properties>
+
+				<!-- APPLICATION PROPERTIES -->
+				<techcdr.saikufao.rest.client.host>http://hqldvtcdras1.hq.un.fao.org:8080</techcdr.saikufao.rest.client.host>
+
+			</properties>
+		</profile>
+	</profiles>
+	
 	<build>
 		<!-- <outputDirectory>target/WEB-INF/classes</outputDirectory> -->
 		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version><!--$NO-MVN-MAN-VER$ -->
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

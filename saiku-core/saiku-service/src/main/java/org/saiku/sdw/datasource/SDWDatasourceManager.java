@@ -117,6 +117,7 @@ public class SDWDatasourceManager implements IDatasourceManager{
 											 props.setProperty("schemaName", schemaName);
 											 props.setProperty("schemaLanguage", schemaLanguage.getLanguage());
 											 
+											 
 											 //String datasourceName = workspaceName + " | " + catalogName + " | " + schemaName + " | " + connectionname;
 											 SaikuDatasource ds = new SaikuDatasource(datasourceName,SaikuDatasource.Type.OLAP,props);
 											 datasources.put(datasourceName, ds);

@@ -23,12 +23,12 @@ package org.saiku.web.rest.util;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import org.saiku.olap.dto.resultset.AbstractBaseCell;
 import org.saiku.olap.dto.resultset.CellDataSet;
 import org.saiku.olap.dto.resultset.DataCell;
+import org.saiku.olap.dto.resultset.FaoMemberCell;
 import org.saiku.olap.dto.resultset.MemberCell;
 import org.saiku.web.rest.objects.resultset.Cell;
 import org.saiku.web.rest.objects.resultset.QueryResult;
@@ -134,7 +134,29 @@ public class RestUtil {
 				// TODO no properties  (NULL) for now - 
 				return new Cell(dcell.getFormattedValue(), metaprops, Cell.Type.DATA_CELL);
 			}
-			if (acell instanceof MemberCell) {
+			else if (acell instanceof FaoMemberCell) {
+				FaoMemberCell mcell = (FaoMemberCell) acell;
+
+				Properties props = new Properties();
+				if ( mcell != null && mcell.getProperty("levelindex") != null) {
+					props.put("levelindex", mcell.getProperty("levelindex"));
+					if (mcell.getParentDimension() != null) {
+						props.put("dimension", mcell.getParentDimension());
+					}
+					if (mcell.getUniqueName() != null) {
+						props.put("uniquename", mcell.getUniqueName());
+					}
+				}
+
+				props.putAll(mcell.getFaoProperties());
+
+				// TODO no properties  (NULL) for now - 
+				if ("row_header_header".equals(mcell.getProperty("__headertype"))) {
+					headertype = Cell.Type.ROW_HEADER_HEADER;
+				}
+				return new Cell("" + mcell.getFormattedValue(), props, headertype);
+			}
+			else if (acell instanceof MemberCell) {
 				MemberCell mcell = (MemberCell) acell;
 //				Properties metaprops = new Properties();
 //				metaprops.put("children", "" + mcell.getChildMemberCount());
@@ -152,7 +174,8 @@ public class RestUtil {
 						props.put("uniquename", mcell.getUniqueName());
 					}
 				}
-//				props.putAll(mcell.getProperties());
+				
+				//props.putAll(mcell.getProperties());
 
 				// TODO no properties  (NULL) for now - 
 				if ("row_header_header".equals(mcell.getProperty("__headertype"))) {
@@ -160,7 +183,6 @@ public class RestUtil {
 				}
 				return new Cell("" + mcell.getFormattedValue(), props, headertype);
 			}
-
 		}
 		return null;
 	}

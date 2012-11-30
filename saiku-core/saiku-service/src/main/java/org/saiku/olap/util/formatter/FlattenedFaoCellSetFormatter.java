@@ -23,11 +23,12 @@ import java.text.DecimalFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.olap4j.Cell;
 import org.olap4j.CellSet;
@@ -39,12 +40,17 @@ import org.olap4j.impl.Olap4jUtil;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.NamedList;
+import org.olap4j.metadata.Property;
 import org.saiku.olap.dto.resultset.DataCell;
+import org.saiku.olap.dto.resultset.FaoMemberCell;
 import org.saiku.olap.dto.resultset.Matrix;
-import org.saiku.olap.dto.resultset.MemberCell;
 
 
-public class FlattenedCellSetFormatter implements ICellSetFormatter {
+public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
+
+	private Pattern dimensionSubtypePattern = Pattern.compile(".*\\{(.+) Dimension\\}.*");
+	
 	/**
 	 * Description of an axis.
 	 */
@@ -163,7 +169,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 	private List<Integer> ignorey = new ArrayList<Integer>();
 
 	public Matrix format(final CellSet cellSet) {
-
+		
 		// Compute how many rows are required to display the columns axis.
 		final CellSetAxis columnsAxis;
 		if (cellSet.getAxes().size() > 0) {
@@ -271,7 +277,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 				Level xLevel = levels.get(x);
 				String s = xLevel.getCaption();
 				for (int y = 0; y < yOffset; y++) {
-					final MemberCell memberInfo = new MemberCell(false, x > 0);
+					final FaoMemberCell memberInfo = new FaoMemberCell(false, x > 0);
 					if (y == yOffset-1) {
 						memberInfo.setRawValue(s);
 						memberInfo.setFormattedValue(s);
@@ -292,7 +298,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 			for(int yy=matrix.getMatrixHeight(); yy > matrix.getOffset() ; yy--) {
 				for(int xx=0; xx < headerwidth-1;xx++) {
 							if (matrix.get(xx,yy-1) != null && matrix.get(xx,yy) != null && matrix.get(xx,yy-1).getRawValue().equals(matrix.get(xx, yy).getRawValue())) {
-								matrix.set(xx, yy, new MemberCell());
+								matrix.set(xx, yy, new FaoMemberCell());
 							}
 							else {
 								break;
@@ -343,38 +349,6 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 			}
 			final DataCell cellInfo = new DataCell(true, false, coordList);
 			cellInfo.setCoordinates(cell.getCoordinateList());
-//			for (int z = 0; z < matrix.getMatrixHeight(); z++) {
-//				final AbstractBaseCell headerCell = matrix.get(x, z);
-//
-//				if (headerCell instanceof MemberCell && ((MemberCell) headerCell).getUniqueName() != null) {
-//				} else {
-//					cellInfo.setParentColMember((MemberCell) matrix.get(x, z - 1));
-//					break;
-//				}
-//			}
-//
-//			for (int z = 0; z < matrix.getMatrixWidth(); z++) {
-//				final AbstractBaseCell headerCell = matrix.get(z, y);
-//				if (headerCell instanceof MemberCell && ((MemberCell) headerCell).getUniqueName() != null) {
-//
-//				} else {
-//					cellInfo.setParentRowMember((MemberCell) matrix.get(z - 1, y));
-//					break;
-//				}
-//			}
-
-			//            NamedList<Property> proplist = null;
-			//            try {
-			//                proplist = cell.getCellSet().getMetaData().getCellProperties();
-			//                for(int i = 0; i<proplist.size(); i++){
-			//                	
-			//                    cellInfo.setProperty(proplist.get(i).getName(), cell.getPropertyValue(proplist.get(i)).toString());
-			//               }
-			//          
-			//            } catch (OlapException e1) {
-			//                // TODO Auto-generated catch block
-			//                e1.printStackTrace();
-			//            }
 
 
 			if (cell.getValue() != null) {
@@ -432,7 +406,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 		if (axis == null)
 			return;
 		final Member[] prevMembers = new Member[axisInfo.getWidth()];
-		final MemberCell[] prevMemberInfo = new MemberCell[axisInfo.getWidth()];
+		final FaoMemberCell[] prevMemberInfo = new FaoMemberCell[axisInfo.getWidth()];
 		final Member[] members = new Member[axisInfo.getWidth()];
 
 		for (int i = 0; i < axis.getPositions().size(); i++) {
@@ -470,7 +444,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 			boolean expanded = false;
 			boolean same = true;
 			for (int y = 0; y < members.length; y++) {
-				final MemberCell memberInfo = new MemberCell();
+				final FaoMemberCell memberInfo = new FaoMemberCell();
 				final Member member = members[y];
 				
 				int index = memberList.indexOf(member);
@@ -497,24 +471,59 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 					memberInfo.setFormattedValue(member.getCaption()); // First try to get a formatted value
 					memberInfo.setParentDimension(member.getDimension().getName());
 					memberInfo.setUniquename(member.getUniqueName());
-//					try {
-//						memberInfo.setChildMemberCount(member.getChildMemberCount());
-//					} catch (OlapException e) {
-//						e.printStackTrace();
-//						throw new RuntimeException(e);
-//					}
-//					NamedList<Property> values = member.getLevel().getProperties();
-//					for(int j=0; j<values.size();j++){
-//						String val;
-//						try {
-//							val = member.getPropertyFormattedValue(values.get(j));
-//						} catch (OlapException e) {
-//							e.printStackTrace();
-//							throw new RuntimeException(e);
-//						}
-//						memberInfo.setProperty(values.get(j).getCaption(), val);
-//					}
 
+					// TODO: working here
+					///////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////
+					
+					Dimension dimension = member.getLevel().getHierarchy().getDimension();
+					System.out.println(">>>>>>>>>>>>>>>>>>Processing dimension.");
+					try {
+						Dimension.Type type = dimension.getDimensionType();
+						System.out.println(">>Dimension type: " + type);
+						if(type != null)
+							memberInfo.setFaoProperty("dimensionType", type.toString());
+
+						String description = dimension.getDescription();
+						System.out.println(">>Dimension description: " + description);
+						if(description != null) {
+							Matcher m = dimensionSubtypePattern.matcher(description);
+							if(m.matches())
+								memberInfo.setFaoProperty("dimensionSubtype", m.group(1));
+						}
+						
+					} catch (OlapException e) {
+						e.printStackTrace();
+						throw new RuntimeException(e);
+					}
+					
+					
+					System.out.println(">>>>>>>>>>>>>>>>>>Processing properties.");
+					NamedList<Property> properties = member.getLevel().getProperties();
+					System.out.println(">>No. of properties: " + properties.size());
+					for(int j = 0; j < properties.size(); j++) {
+						
+						Property property = properties.get(j);
+						String propertyName = property.getName();
+						System.out.println(">>Analyzing property: " + propertyName);
+						
+						if(!propertyName.trim().toLowerCase().startsWith("uuid"))
+							continue;
+						
+						String val;
+						try {
+							val = member.getPropertyFormattedValue(property);
+						} catch (OlapException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);
+						}
+						memberInfo.setFaoProperty(propertyName, val);
+						System.out.println(String.format("Added property %s with value %s", propertyName, val));
+					}
+					///////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////
+
+					
 					if (y > 0) {
 						for (int previ = y-1; previ >= 0;previ--) {
 							if(prevMembers[previ] != null) {
@@ -559,7 +568,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 						while (l != null && parent != null && !parent.getLevel().getUniqueName().equals(l.getUniqueName())) {
 							parent = parent.getParentMember();
 						}
-						final MemberCell pInfo = new MemberCell();
+						final FaoMemberCell pInfo = new FaoMemberCell();
 						if(parent != null){
 							pInfo.setRawValue(parent.getCaption());
 							pInfo.setFormattedValue(parent.getCaption()); // First try to get a formatted value

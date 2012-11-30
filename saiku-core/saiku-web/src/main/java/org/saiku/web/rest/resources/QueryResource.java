@@ -60,6 +60,7 @@ import org.saiku.olap.dto.resultset.CellDataSet;
 import org.saiku.olap.util.SaikuProperties;
 import org.saiku.olap.util.formatter.CellSetFormatter;
 import org.saiku.olap.util.formatter.FlattenedCellSetFormatter;
+import org.saiku.olap.util.formatter.FlattenedFaoCellSetFormatter;
 import org.saiku.olap.util.formatter.HierarchicalCellSetFormatter;
 import org.saiku.olap.util.formatter.ICellSetFormatter;
 import org.saiku.service.olap.OlapDiscoverService;
@@ -374,12 +375,16 @@ public class QueryResource {
 			}
 			else if (formatter.equals("flattened")) {
 				icf = new FlattenedCellSetFormatter();
-			} else {
+			}
+			else if (formatter.equals("flattened_fao")) {
+				icf = new FlattenedFaoCellSetFormatter();
+			} 
+			else {
 				icf = new FlattenedCellSetFormatter();
 			}
 
 			olapQueryService.qm2mdx(queryName);
-			CellDataSet cs = olapQueryService.executeMdx(queryName,mdx, icf);
+			CellDataSet cs = olapQueryService.executeMdx(queryName, mdx, icf);
 			return RestUtil.convert(cs);
 		}
 		catch (Exception e) {
