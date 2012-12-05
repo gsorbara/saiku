@@ -99,7 +99,18 @@ public class ObjectUtil {
 
 	public static SaikuHierarchy convert(Hierarchy hierarchy) {
 		try {
-			return new SaikuHierarchy(hierarchy.getName(), hierarchy.getUniqueName(), hierarchy.getCaption(), hierarchy.getDimension().getUniqueName(), convertLevels(hierarchy.getLevels()), convertMembers(hierarchy.getRootMembers()));
+			String defaultMember = hierarchy.getDefaultMember() != null && !hierarchy.getDefaultMember().isAll() ? 
+					hierarchy.getDefaultMember().getUniqueName() : 
+					null;
+			
+			return new SaikuHierarchy(
+					hierarchy.getName(), 
+					hierarchy.getUniqueName(), 
+					hierarchy.getCaption(), 
+					hierarchy.getDimension().getUniqueName(), 
+					defaultMember,
+					convertLevels(hierarchy.getLevels()), 
+					convertMembers(hierarchy.getRootMembers()));
 		} catch (OlapException e) {
 			throw new RuntimeException("Cannot get root members",e);
 		}
