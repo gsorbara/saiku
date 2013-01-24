@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.web.rest.resources;
 
@@ -73,6 +69,24 @@ public class OlapDiscoverResource implements Serializable {
 		}
     }
 
+    
+    
+    /**
+     * Returns the datasources available.
+     */
+    @GET
+    @Produces({"application/json" })
+    @Path("/{connection}")
+     public List<SaikuConnection> getConnections( @PathParam("connection") String connectionName) {
+    	try {
+			return olapDiscoverService.getConnection(connectionName);
+		} catch (Exception e) {
+			log.error(this.getClass().getName(),e);
+			return new ArrayList<SaikuConnection>();
+		}
+    }
+
+
     @GET
     @Produces({"application/json" })
   	@Path("/refresh")
@@ -89,10 +103,22 @@ public class OlapDiscoverResource implements Serializable {
     @GET
     @Produces({"application/json" })
   	@Path("/refresh/{connection}")
-     public List<SaikuConnection> refreshConnection(@PathParam("connection") String connectionName) {
+     public List<SaikuConnection> refreshConnectionSDW(@PathParam("connection") String connectionName) {
+    	return refreshConnection(connectionName);
+    }
+
+
+    @GET
+    @Produces({"application/json" })
+    @Path("/{connection}/refresh")
+     public List<SaikuConnection> refreshConnectionOSBI( @PathParam("connection") String connectionName) {
+    	return refreshConnection(connectionName);
+    }
+    
+    private List<SaikuConnection> refreshConnection(String connectionName){
     	try {
-    		olapDiscoverService.refreshConnection(connectionName);
-			return olapDiscoverService.getAllConnections();
+			olapDiscoverService.refreshConnection(connectionName);
+			return olapDiscoverService.getConnection(connectionName);
 		} catch (Exception e) {
 			log.error(this.getClass().getName(),e);
 			return new ArrayList<SaikuConnection>();
@@ -111,7 +137,7 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getAllDimensions(cube);
 		} catch (Exception e) {
@@ -133,7 +159,7 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getDimension(cube, dimensionName);
 		} catch (Exception e) {
@@ -153,7 +179,7 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getAllDimensionHierarchies(cube, dimensionName);
 		} catch (Exception e) {
@@ -175,7 +201,7 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getAllHierarchyLevels(cube, dimensionName, hierarchyName);
 		} catch (Exception e) {
@@ -204,7 +230,8 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			if(properties == null){
 				return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName);
@@ -238,7 +265,7 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getHierarchyRootMembers(cube, hierarchyName);
 		} catch (Exception e) {
@@ -258,7 +285,8 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getAllHierarchies(cube);
 		} catch (Exception e) {
@@ -277,7 +305,8 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getMeasures(cube);
 		} catch (Exception e) {
@@ -303,14 +332,16 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getMember(cube, memberName);
 		} catch (Exception e) {
 			log.error(this.getClass().getName(),e);
 		}
+
 		return null;
 	}
+	
 	
 	/**
 	 * Get child members of given member
@@ -329,7 +360,7 @@ public class OlapDiscoverResource implements Serializable {
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		try {
 			return olapDiscoverService.getMemberChildren(cube, memberName);
 		} catch (Exception e) {

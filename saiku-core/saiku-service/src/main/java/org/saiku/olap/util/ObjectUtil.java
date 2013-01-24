@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.util;
 
@@ -23,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Collection;
 
 import org.olap4j.Axis;
 import org.olap4j.OlapException;
@@ -49,12 +46,14 @@ import org.saiku.olap.dto.SaikuSelection;
 import org.saiku.olap.dto.SaikuSelection.Type;
 import org.saiku.olap.query.IQuery;
 import org.olap4j.metadata.Property;
+import org.saiku.service.util.exception.SaikuServiceException;
+
 public class ObjectUtil {
 
 
 	public static SaikuDimension convert(Dimension dim) {
 		//SaikuDimension sDim = new SaikuDimension(dim.getName(), dim.getUniqueName(), dim.getCaption(), dim.getDescription(), convertHierarchies(dim.getHierarchies()));
-		
+				
 		//KB: Add dimension type and description:
 		//SaikuDimension sDim = new SaikuDimension(dim.getName(), dim.getUniqueName(), dim.getCaption(), convertHierarchies(dim.getHierarchies()));
 		String dimensionType = null;
@@ -62,6 +61,7 @@ public class ObjectUtil {
 		try {
 			dimensionType = (dim.getDimensionType() == null ? "" : dim.getDimensionType().toString());
 		} catch (OlapException oe) {} //ignore		
+		
 		SaikuDimension sDim = new SaikuDimension(dim.getName(), dim.getUniqueName(), dim.getCaption(), description, dimensionType, convertHierarchies(dim.getHierarchies()));
 		//end KB
 		
@@ -98,21 +98,23 @@ public class ObjectUtil {
 	}
 
 	public static SaikuHierarchy convert(Hierarchy hierarchy) {
-		try {
+		try {			
 			String defaultMember = hierarchy.getDefaultMember() != null && !hierarchy.getDefaultMember().isAll() ? 
 					hierarchy.getDefaultMember().getUniqueName() : 
 					null;
-			
 			return new SaikuHierarchy(
 					hierarchy.getName(), 
 					hierarchy.getUniqueName(), 
 					hierarchy.getCaption(), 
+					hierarchy.getDescription(), 
 					hierarchy.getDimension().getUniqueName(), 
 					defaultMember,
+					hierarchy.isVisible(),
 					convertLevels(hierarchy.getLevels()), 
 					convertMembers(hierarchy.getRootMembers()));
+			
 		} catch (OlapException e) {
-			throw new RuntimeException("Cannot get root members",e);
+			throw new SaikuServiceException("Cannot get root members",e);
 		}
 	}
 
@@ -127,25 +129,34 @@ public class ObjectUtil {
 
 	public static SaikuLevel convert(Level level) {
 		try {
-//			List<SaikuMember> members = convertMembers(level.getMembers());
 			
+//			List<SaikuMember> members = convertMembers(level.getMembers());
+						
 			//KB Adding in level depth and cardinality:
-			return new SaikuLevel(
+ 			return new SaikuLevel(
+ 					level.getName(), 
+ 					level.getUniqueName(), 
+ 					level.getCaption(), 
+ 					level.getDescription(),
+ 					level.getDimension().getUniqueName(), 
+					level.getHierarchy().getUniqueName(),
+					level.getDepth(),
+					level.getCardinality(),
+					level.isVisible());
+			/*return new SaikuLevel(
 					level.getName(), 
 					level.getUniqueName(), 
 					level.getCaption(), 
 					level.getDimension().getUniqueName(), 
 					level.getHierarchy().getUniqueName(),
-					level.getDepth(),
-					level.getCardinality());
+					level.isVisible());*/
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			throw new SaikuServiceException("Cannot convert level: " + level,e);
 		}
-		return null;
 	}
 
-	public static List<SaikuMember> convertMembers(List<Member> members) {
+	public static List<SaikuMember> convertMembers(Collection<Member> members) {
 		List<SaikuMember> memberList= new ArrayList<SaikuMember>();
 		for (Member l : members) {
 			memberList.add(convert(l));
@@ -154,13 +165,13 @@ public class ObjectUtil {
 
 	}
 	
+
 	public static List<PropertySaikuMember> convertMembers(List<Member> members, String properties) {
 		List<PropertySaikuMember> memberList= new ArrayList<PropertySaikuMember>();
 		for (Member l : members) {
 			memberList.add(convert(l, properties));
 		}
 		return memberList;
-
 	}
 	
 	public static List<SaikuSelection> convertSelections(List<Selection> selections) {
@@ -197,7 +208,6 @@ public class ObjectUtil {
 	}
 
 	public static SaikuMember convert(Member m) {
-		
 		//KB: Add MEMBER_KEY property:
 		//KB Add ChildMemberCount:
 		String memberKey = "";
@@ -232,77 +242,76 @@ public class ObjectUtil {
 					m.getHierarchy().getUniqueName(),
 					m.getLevel().getUniqueName(),
 					memberKey,
-					childMemberCount);
-		
-	}
-	
-	public static PropertySaikuMember convert(Member m, String properties) {		
-		
-		List<SaikuProperty> prop = new ArrayList<SaikuProperty>();	
-		String memberKey = "";
-		int childMemberCount = 0;
-		try {
-			Object memberKeyObj = m.getPropertyValue(Property.StandardMemberProperty.MEMBER_KEY);
-			memberKey = (memberKeyObj != null ? memberKeyObj.toString() : null);			
-			childMemberCount = m.getChildMemberCount();
-			
-			List<String> sPropKeys = new ArrayList<String>();
-			sPropKeys.add("$name");
-			StandardMemberProperty sProps[]  = Property.StandardMemberProperty.values();
-			for(StandardMemberProperty s : sProps)
-				sPropKeys.add(s.getName());
-			
-			NamedList<Property> ps = m.getProperties();								
-			if(ps != null){
-				if(!"all".equalsIgnoreCase(properties)){
-					String propertiesSelectList[] = properties.split(",");
-					HashSet<String> propHash = new HashSet<String>();
-					propHash.addAll(Arrays.asList(propertiesSelectList));
-					ArrayList<String> propKeys = new ArrayList<String>();
-					propKeys.addAll(propHash);
-					
-					for(String propertiesSelect : propHash){
-						Property p = ps.get(propertiesSelect);	
-						if(p != null){
-							if(!sPropKeys.contains(p.getName())){
-								if(p.getUniqueName().equals(propertiesSelect) || p.getName().equals(propertiesSelect) ){
-									prop.add(new SaikuProperty(
-													p.getName() , 
-													p.getCaption(), 
-													m.getPropertyFormattedValue(p)));
-								}
-							}
-						}		
-					}								
-				}else{					
-					for(Property p : ps){
-						if(!sPropKeys.contains(p.getName()))
-							prop.add(new SaikuProperty(
-											p.getName() , 
-											p.getCaption(), 
-											m.getPropertyValue(p)+"" ));
-					}
-				}
-			}					
-			
-		} catch (Exception e) {
-		//ignore
+					childMemberCount);			
 		}
 		
-		return new PropertySaikuMember(
-				m.getName(), 
-				m.getUniqueName(), 
-				m.getCaption(), 
-				m.getDescription(),
-				m.getDimension().getUniqueName(),
-				m.getHierarchy().getUniqueName(),
-				m.getLevel().getUniqueName(),
-				memberKey,
-				childMemberCount,
-				prop);
-		
-	}
-
+		public static PropertySaikuMember convert(Member m, String properties) {		
+			
+			List<SaikuProperty> prop = new ArrayList<SaikuProperty>();	
+			String memberKey = "";
+			int childMemberCount = 0;
+			try {
+				Object memberKeyObj = m.getPropertyValue(Property.StandardMemberProperty.MEMBER_KEY);
+				memberKey = (memberKeyObj != null ? memberKeyObj.toString() : null);			
+				childMemberCount = m.getChildMemberCount();
+				
+				List<String> sPropKeys = new ArrayList<String>();
+				sPropKeys.add("$name");
+				StandardMemberProperty sProps[]  = Property.StandardMemberProperty.values();
+				for(StandardMemberProperty s : sProps)
+					sPropKeys.add(s.getName());
+				
+				NamedList<Property> ps = m.getProperties();								
+				if(ps != null){
+					if(!"all".equalsIgnoreCase(properties)){
+						String propertiesSelectList[] = properties.split(",");
+						HashSet<String> propHash = new HashSet<String>();
+						propHash.addAll(Arrays.asList(propertiesSelectList));
+						ArrayList<String> propKeys = new ArrayList<String>();
+						propKeys.addAll(propHash);
+						
+						for(String propertiesSelect : propHash){
+							Property p = ps.get(propertiesSelect);	
+							if(p != null){
+								if(!sPropKeys.contains(p.getName())){
+									if(p.getUniqueName().equals(propertiesSelect) || p.getName().equals(propertiesSelect) ){
+										prop.add(new SaikuProperty(
+														p.getName() , 
+														p.getCaption(), 
+														m.getPropertyFormattedValue(p)));
+									}
+								}
+							}		
+						}								
+					}else{					
+						for(Property p : ps){
+							if(!sPropKeys.contains(p.getName()))
+								prop.add(new SaikuProperty(
+												p.getName() , 
+												p.getCaption(), 
+												m.getPropertyValue(p)+"" ));
+						}
+					}
+				}					
+				
+			} catch (Exception e) {
+			//ignore
+			}
+			
+			return new PropertySaikuMember(
+					m.getName(), 
+					m.getUniqueName(), 
+					m.getCaption(), 
+					m.getDescription(),
+					m.getDimension().getUniqueName(),
+					m.getHierarchy().getUniqueName(),
+					m.getLevel().getUniqueName(),
+					memberKey,
+					childMemberCount,
+					prop);
+			
+	}		
+	
 	public static SaikuDimensionSelection convertDimensionSelection(QueryDimension dim) {
 		List<SaikuSelection> selections = ObjectUtil.convertSelections(dim.getInclusions());
 		return new SaikuDimensionSelection(

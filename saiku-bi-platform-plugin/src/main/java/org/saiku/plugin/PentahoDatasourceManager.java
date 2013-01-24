@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.plugin;
 
@@ -25,7 +21,15 @@ import java.util.Map;
 import java.util.Properties;
 
 import mondrian.olap.MondrianProperties;
+<<<<<<< HEAD
 
+=======
+import mondrian.olap.Util;
+import mondrian.olap.Util.PropertyList;
+import mondrian.rolap.RolapConnectionProperties;
+
+import org.apache.commons.lang.StringUtils;
+>>>>>>> osbi_release_2.4
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Attribute;
@@ -37,7 +41,10 @@ import org.pentaho.platform.engine.services.solution.PentahoEntityResolver;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
 import org.saiku.datasources.connection.ISaikuConnection;
 import org.saiku.datasources.datasource.SaikuDatasource;
+<<<<<<< HEAD
 import org.saiku.plugin.util.PentahoDatasourceProcessor;
+=======
+>>>>>>> osbi_release_2.4
 import org.saiku.service.datasource.IDatasourceManager;
 import org.xml.sax.EntityResolver;
 
@@ -47,11 +54,41 @@ public class PentahoDatasourceManager implements IDatasourceManager {
 
 	private Map<String,SaikuDatasource> datasources = new HashMap<String,SaikuDatasource>();
 
+	/**TO BE DELETE: sdw-saiku
 	public PentahoDatasourceManager() {
 		load();
 		MondrianProperties.instance().DataSourceResolverClass.setString("org.saiku.plugin.PentahoDataSourceResolver");
 	}
+	 */
 
+	private String saikuDatasourceProcessor;
+	
+	private String saikuConnectionProcessor;
+
+	private String dynamicSchemaProcessor;
+
+	public void setDatasourceResolverClass(String datasourceResolverClass) {
+		MondrianProperties.instance().DataSourceResolverClass.setString(datasourceResolverClass);
+	}
+	
+	public void setSaikuDatasourceProcessor(String datasourceProcessor) {
+		this.saikuDatasourceProcessor = datasourceProcessor;
+	}
+	
+	public void setSaikuConnectionProcessor(String connectionProcessor) {
+		this.saikuConnectionProcessor = connectionProcessor;
+	}
+	
+	public void setDynamicSchemaProcessor(String dynamicSchemaProcessor) {
+		this.dynamicSchemaProcessor = dynamicSchemaProcessor;
+	}
+	
+	public PentahoDatasourceManager() {
+	}
+	
+	public void init() {
+		load();
+	}
 
 	public void load() {
 		datasources.clear();
@@ -84,11 +121,34 @@ public class PentahoDatasourceManager implements IDatasourceManager {
 
 				Node ds = node.selectSingleNode("DataSourceInfo");
 				Node cat = node.selectSingleNode("Definition");
+
+				/** TO BE DELETE: sdw-saiku
 				LOG.debug("NAME: " + name + " DSINFO: " + (ds != null ? ds.getStringValue() : "NULL")+ "  ###CATALOG: " +  (cat != null ? cat.getStringValue() : "NULL"));
 				Properties props = new Properties();
 				props.put("driver", "mondrian.olap4j.MondrianOlap4jDriver");
 				props.put("location","jdbc:mondrian:" + ds.getStringValue() + ";Catalog=" + cat.getStringValue());
 				props.put(ISaikuConnection.DATASOURCE_PROCESSORS, PentahoDatasourceProcessor.class.getCanonicalName());
+				*/
+				
+				String connectStr = ds.getStringValue();
+				PropertyList pl = Util.parseConnectString(connectStr);
+				String dynProcName = pl.get(
+		                RolapConnectionProperties.DynamicSchemaProcessor.name());
+				if (StringUtils.isNotBlank(dynamicSchemaProcessor) && StringUtils.isBlank(dynProcName)) {
+					pl.put(RolapConnectionProperties.DynamicSchemaProcessor.name(), dynamicSchemaProcessor);
+					
+				}
+				LOG.debug("NAME: " + name + " DSINFO: " + (ds != null ? ds.getStringValue() : "NULL")+ "  ###CATALOG: " +  (cat != null ? cat.getStringValue() : "NULL"));
+				Properties props = new Properties();
+				props.put("driver", "mondrian.olap4j.MondrianOlap4jDriver");
+				props.put("location","jdbc:mondrian:" + ds.getStringValue() + ";Catalog=" + cat.getStringValue());
+				if (saikuDatasourceProcessor != null) {
+					props.put(ISaikuConnection.DATASOURCE_PROCESSORS, saikuDatasourceProcessor);
+				}
+				if (saikuConnectionProcessor != null) {
+					props.put(ISaikuConnection.CONNECTION_PROCESSORS, saikuConnectionProcessor);
+				}
+
 				props.list(System.out);
 
 				SaikuDatasource sd = new SaikuDatasource(name, SaikuDatasource.Type.OLAP, props);
@@ -148,13 +208,9 @@ public class PentahoDatasourceManager implements IDatasourceManager {
 		return datasources.get(datasourceName);
 	}
 
-
 	public void loadByName(String name) {
 		// TODO Auto-generated method stub
 		
 	}
-
-
-
 
 }

@@ -1,5 +1,6 @@
 package org.saiku.olap.discover;
 
+
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +17,8 @@ import org.saiku.AbstractServiceUtils;
 import org.saiku.TConnectionManager;
 import org.saiku.datasources.connection.IConnectionManager;
 import org.saiku.datasources.datasource.SaikuDatasource;
+
+import org.saiku.olap.dto.*;
 import org.saiku.olap.dto.PropertySaikuMember;
 import org.saiku.olap.dto.SaikuConnection;
 import org.saiku.olap.dto.SaikuCube;
@@ -37,6 +41,8 @@ import org.saiku.service.datasource.IDatasourceManager;
  */
 public class OlapMetaExplorerTest extends ServiceTest{
 
+    private static OlapMetaExplorer olapMetaExplorer;
+    private static Properties testProps = new Properties();
 	/**
 	 * dimension name
 	 */
@@ -76,6 +82,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
 		OlapTestParams.setupParams(OlapTestParams.FOODMART_DATA);
 	}
 	
+
     /**
      * Test that you can fetch all available connections.
      * @throws SaikuOlapException
@@ -87,8 +94,8 @@ public class OlapMetaExplorerTest extends ServiceTest{
        assertNotNull(output);
        
        assertEquals(1, output.size());
-       assertEquals(connectionName, output.get(0).getName());
-       
+
+       assertEquals(connectionName, output.get(0).getName());       
     }
     
     /**
@@ -129,16 +136,20 @@ public class OlapMetaExplorerTest extends ServiceTest{
     @Test
     public final void testGetConnections() throws SaikuOlapException{
         List<String> list = new ArrayList<String>();
+
         list.add(connectionName);
+
         List<SaikuConnection> connections = olapMetaExplorer.getConnections(list);
         
         assertNotNull(connections);
         
         assertEquals(connectionName, connections.get(0).getName());
+
     }
     
     @Test
     public final void testGetNativeConnection() throws SaikuOlapException{
+
         OlapConnection output = olapMetaExplorer.getNativeConnection(connectionName);
         
         assertNotNull(output);
@@ -164,11 +175,13 @@ public class OlapMetaExplorerTest extends ServiceTest{
      */
     @Test
     public final void testGetCubesSingleConnection(){
+    	
         List<SaikuCube> output = olapMetaExplorer.getCubes(connectionName);
 
         assertNotNull(output);
 
         assertEquals(OlapTestParams.cubeName, output.get(OlapTestParams.cubeNameIndex).getName());
+
     }
     
     /**
@@ -177,7 +190,9 @@ public class OlapMetaExplorerTest extends ServiceTest{
     @Test
     public final void testGetCubesMultipleConnections(){
         List<String> cubes = new ArrayList<String>();
+
         cubes.add(connectionName);
+
         List<SaikuCube> output = olapMetaExplorer.getCubes(cubes);
 
         assertNotNull(output);
@@ -205,6 +220,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
         	assertEquals(connectionName, output.get(i).getConnectionName());
         	output.get(i).getCubeName();
         	assertEquals(OlapTestParams.schemaName, output.get(i).getSchemaName());
+
         	output.get(i).getUniqueName();
         }
         
@@ -212,20 +228,21 @@ public class OlapMetaExplorerTest extends ServiceTest{
     
     /**
      * Test to make sure that the cubes are returned in the same order.
-     */
+     */    
     @Test
     public final void testCubeReturnOrder(){
-    	 List<SaikuCube> output = olapMetaExplorer.getAllCubes();
-    	 
+      List<SaikuCube> output = olapMetaExplorer.getAllCubes();
+      
          assertNotNull(output);
 
-         //String[] names = { "HR","Sales 2","Sales Ragged","Sales Scenario","Sales","Store","Warehouse and Sales","Warehouse"};
+         String[] names = { "HR","Sales", "Sales 2","Sales Ragged","Sales Scenario","Store","Warehouse","Warehouse and Sales"};
 
          for (int i = 0; i < output.size(); i++){
-         	assertEquals(OlapTestParams.cubesInOrder[i], output.get(i).getName());
-         	assertEquals("["+OlapTestParams.cubesInOrder[i]+"]",output.get(i).getCubeName());
+          assertEquals(names[i], output.get(i).getName());
+          assertEquals("["+names[i]+"]",output.get(i).getCubeName());
          }
-    }
+    } 
+    
     public final void testGetNativeCube(){
         
         
@@ -247,6 +264,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     	        break;
     		}
 		}
+
     }
     
     /**
@@ -266,6 +284,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     	        break;
     		}
 		}
+
     }
     
     /**
@@ -276,22 +295,22 @@ public class OlapMetaExplorerTest extends ServiceTest{
     public final void testGetDimensionNull() throws SaikuOlapException{
         List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
         
+
         for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
     			
     			SaikuDimension dim = olapMetaExplorer.getDimension(cubes.get(0), "No dimension");
-    		    assertNull(dim);
-    		    
+    		    assertNull(dim);    		    
     	        break;
     		}
 		}    
     }
+
     
     @Test
-    public final void testGetAllHierarchies() throws SaikuOlapException{
-        
-    	List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
+    public final void testGetAllHierarchies() throws SaikuOlapException{        
 
+    	List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
     	
         for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
@@ -306,6 +325,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     		}
 		}    
     	
+
     }
     
     @Test
@@ -324,6 +344,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     		}
 		}    
     	
+
     }
 
 //    @Test
@@ -333,7 +354,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     
     @Test
     public final void testGetAllLevels() throws SaikuOlapException{
-        
+
     	List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
     	for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
@@ -348,12 +369,11 @@ public class OlapMetaExplorerTest extends ServiceTest{
     		}
 		}    
     	
-    	
     }
     
     @Test
     public final void testGetAllLevelsUniqueNameHierarchy() throws SaikuOlapException{
-        
+
     	List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
     	for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
@@ -457,12 +477,12 @@ public class OlapMetaExplorerTest extends ServiceTest{
     			assertEquals(OlapTestParams.totalMember, members.size());
     	        break;
     		}
-    	}
-    	
+    	}    	
     }
     
     @Test
     public final void testGetAllMembersUniqueNameLevel() throws SaikuOlapException{
+
     	List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
     	for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
@@ -594,4 +614,43 @@ public class OlapMetaExplorerTest extends ServiceTest{
 	    
 	}
     
+
+    
+    
+    @BeforeClass
+    public static void setup() throws IOException{
+	    AbstractServiceUtils ast = new AbstractServiceUtils();
+	    ast.initTestContext();
+	    IConnectionManager ic = new TConnectionManager();
+	    String returned = computeTestDataRoot(OlapMetaExplorerTest.class);
+	    File f = new File(System.getProperty("java.io.tmpdir")+"/files/");
+	    f.mkdir();
+	    IDatasourceManager ds = new ClassPathResourceDatasourceManager(System.getProperty("java.io.tmpdir")+"/files/");
+	    InputStream inputStream= OlapMetaExplorerTest.class.getResourceAsStream("connection.properties");
+	    try {
+	        testProps.load(inputStream);
+	    } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+	    }
+	    ds.setDatasource(new SaikuDatasource("test", SaikuDatasource.Type.OLAP, testProps));
+	    ic.setDataSourceManager(ds);
+	    olapMetaExplorer = new OlapMetaExplorer(ic);
+	
+	}
+    
+    public static String computeTestDataRoot(Class anyTestClass) throws IOException {
+        
+        //create a temp file
+        File temp = File.createTempFile("temp-file-name", ".tmp"); 
+
+        System.out.println("Temp file : " + temp.getAbsolutePath());
+
+    //Get tempropary file path
+        String absolutePath = temp.getAbsolutePath();
+        String tempFilePath = absolutePath.
+            substring(0,absolutePath.lastIndexOf(File.separator));
+        return tempFilePath+"/";
+      }
+
 }

@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.query;
 
@@ -106,7 +102,7 @@ public class QueryDeserializer {
         	String connectionName = queryElement.getAttributeValue(CONNECTION);
         	String catalogName = queryElement.getAttributeValue(CATALOG);
         	String schemaName = queryElement.getAttributeValue(SCHEMA);
-        	return new SaikuCube(connectionName,cubeName,cubeName,catalogName,schemaName);
+        	return new SaikuCube(connectionName,cubeName,cubeName,cubeName,catalogName,schemaName);
         }
         throw new Exception("Cant find <QueryModel> nor <MDX> Query");
     }
@@ -131,7 +127,7 @@ public class QueryDeserializer {
         	String schemaName = queryElement.getAttributeValue(SCHEMA);
             Query tmpQuery = createEmptyQuery("tmp-1234",catalogName, schemaName, cubeName);
             Cube cub = tmpQuery.getCube();
-        	return new SaikuCube(connectionName,cub.getUniqueName(), cub.getName(),catalogName,schemaName);
+        	return new SaikuCube(connectionName,cub.getUniqueName(), cub.getName(), cub.getCaption(), catalogName,schemaName);
         }
         throw new Exception("Cant find <QueryModel> nor <MDX> Query");
     }
@@ -156,8 +152,8 @@ public class QueryDeserializer {
                 if (qmElement != null) {
                     qm = createEmptyQuery(queryName,catalogName, schemaName, cubeName);
                     manipulateQuery(qmElement);
-                    SaikuCube cube = new SaikuCube(connectionName,cubeName, qm.getCube().getName(),catalogName,schemaName);
-                    return new OlapQuery(qm,cube,false);
+                    SaikuCube cube = new SaikuCube(connectionName,cubeName, qm.getCube().getName(),qm.getCube().getCaption(),catalogName,schemaName);
+                    return new OlapQuery(qm,connection, cube,false);
                 }
                 else
                     throw new OlapException("Can't find child <QueryModel>");
@@ -188,7 +184,7 @@ public class QueryDeserializer {
             try {
                 Element mdxElement = queryElement.getChild("MDX");
                 if (mdxElement != null) {
-                    SaikuCube cube = new SaikuCube(connectionName,cubeName, cubeName,catalogName,schemaName);
+                    SaikuCube cube = new SaikuCube(connectionName,cubeName, cubeName, cubeName, catalogName,schemaName);
                     return new MdxQuery(connection,cube,queryName,mdxElement.getText());
                 }
                 else

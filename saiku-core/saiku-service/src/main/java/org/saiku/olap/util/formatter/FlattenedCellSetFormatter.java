@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.util.formatter;
 
@@ -28,24 +24,29 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.*;
 
 import org.olap4j.Cell;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.OlapException;
+
 import org.olap4j.Position;
 import org.olap4j.impl.CoordinateIterator;
 import org.olap4j.impl.Olap4jUtil;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.Property;
+
 import org.saiku.olap.dto.resultset.DataCell;
 import org.saiku.olap.dto.resultset.Matrix;
 import org.saiku.olap.dto.resultset.MemberCell;
 
-
 public class FlattenedCellSetFormatter implements ICellSetFormatter {
-	/**
+
+    /**
+
 	 * Description of an axis.
 	 */
 	private static class AxisInfo {
@@ -116,6 +117,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 	}
 
 	/**
+
 	 * Returns an iterator over cells in a result.
 	 */
 	private static Iterable<Cell> cellIter(final int[] pageCoords, final CellSet cellSet) {
@@ -163,7 +165,6 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 	private List<Integer> ignorey = new ArrayList<Integer>();
 
 	public Matrix format(final CellSet cellSet) {
-
 		// Compute how many rows are required to display the columns axis.
 		final CellSetAxis columnsAxis;
 		if (cellSet.getAxes().size() > 0) {
@@ -233,6 +234,8 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 	 * @param cellSet
 	 *            Cell set
 	 * @param pw
+	 * @param pageCoords
+
 	 *            Print writer
 	 * @param pageCoords
 	 *            Coordinates of page [page, chapter, section, ...]
@@ -277,6 +280,11 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 						memberInfo.setFormattedValue(s);
 						memberInfo.setProperty("__headertype", "row_header_header");
 						memberInfo.setProperty("levelindex", "" + levels.indexOf(xLevel));
+
+						memberInfo.setHierarchy(xLevel.getHierarchy().getUniqueName());
+						memberInfo.setParentDimension(xLevel.getDimension().getName());
+						memberInfo.setLevel(xLevel.getUniqueName());
+
 					}
 					matrix.set(x, y, memberInfo);
 				}
@@ -341,6 +349,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 					continue;
 				}
 			}
+
 			final DataCell cellInfo = new DataCell(true, false, coordList);
 			cellInfo.setCoordinates(cell.getCoordinateList());
 //			for (int z = 0; z < matrix.getMatrixHeight(); z++) {
@@ -377,6 +386,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 			//            }
 
 
+
 			if (cell.getValue() != null) {
 				try {
 					cellInfo.setRawNumber(cell.getDoubleValue());
@@ -405,7 +415,31 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 				}
 				// the raw value
 			}
-			cellInfo.setFormattedValue(getValueString(cellValue));
+
+			// 
+			//cellInfo.setFormattedValue(getValueString(cellValue));
+
+
+            // Format string is relevant for Excel export
+			// xmla cells can throw an error on this
+			try {
+				String formatString = (String) cell.getPropertyValue(Property.StandardCellProperty.FORMAT_STRING);
+				if (formatString != null && !formatString.startsWith("|")) {
+					cellInfo.setFormatString(formatString);
+				} else {
+					formatString = formatString.substring(1, formatString.length());
+					cellInfo.setFormatString(formatString.substring(0, formatString.indexOf("|")));
+				}
+			} catch (Exception e) {
+				// we tried
+			}
+
+            Map<String, String> cellProperties = new HashMap<String, String>();
+			String val = Olap4jUtil.parseFormattedCellValue(cellValue, cellProperties);
+			if (!cellProperties.isEmpty()) {
+				cellInfo.setProperties(cellProperties);
+			}
+			cellInfo.setFormattedValue(val);
 			matrix.set(x, y, cellInfo);
 		}
 		return matrix;
@@ -424,6 +458,7 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 	 * @param isColumns
 	 *            True if columns, false if rows
 	 * @param offset
+	 * @param oldoffset
 	 *            Ordinal of first cell to populate in matrix
 	 */
 	private void populateAxis(final Matrix matrix, final CellSetAxis axis, final AxisInfo axisInfo,
@@ -486,9 +521,11 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 
 
 				if (member != null) {
+
 					if (lvls != null && lvls.get(member.getDimension()) != null) {
 						memberInfo.setProperty("levelindex", "" + lvls.get(member.getDimension()).indexOf(member.getLevel().getDepth()));
 					}
+
 					if (x - 1 == offset)
 						memberInfo.setLastRow(true);
 
@@ -497,6 +534,9 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 					memberInfo.setFormattedValue(member.getCaption()); // First try to get a formatted value
 					memberInfo.setParentDimension(member.getDimension().getName());
 					memberInfo.setUniquename(member.getUniqueName());
+					memberInfo.setHierarchy(member.getHierarchy().getName());
+					memberInfo.setLevel(member.getLevel().getUniqueName());
+
 //					try {
 //						memberInfo.setChildMemberCount(member.getChildMemberCount());
 //					} catch (OlapException e) {
@@ -560,15 +600,21 @@ public class FlattenedCellSetFormatter implements ICellSetFormatter {
 							parent = parent.getParentMember();
 						}
 						final MemberCell pInfo = new MemberCell();
-						if(parent != null){
+
+						if (parent != null) {
 							pInfo.setRawValue(parent.getCaption());
 							pInfo.setFormattedValue(parent.getCaption()); // First try to get a formatted value
 							pInfo.setParentDimension(parent.getDimension().getName());
+							pInfo.setHierarchy(parent.getHierarchy().getName());
 							pInfo.setUniquename(parent.getUniqueName());
-						}else{ // In case parent is null, leave field is blank
+							pInfo.setLevel(parent.getLevel().getUniqueName());
+						} else {// In case parent is null, leave field is blank
 							pInfo.setRawValue("");
-							pInfo.setFormattedValue("");
+							pInfo.setFormattedValue(""); // First try to get a formatted value
 							pInfo.setParentDimension("");
+							pInfo.setHierarchy(member.getHierarchy().getName());
+							pInfo.setLevel(member.getLevel().getUniqueName());
+
 							pInfo.setUniquename("");
 						}
 						matrix.set(x_parent, y_parent, pInfo);

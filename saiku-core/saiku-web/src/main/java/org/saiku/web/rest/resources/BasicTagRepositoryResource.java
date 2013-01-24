@@ -1,47 +1,62 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.web.rest.resources;
 
 import java.io.BufferedReader;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URLDecoder;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
-import javax.ws.rs.DELETE;
+
+
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs.FileName;
 import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemOptions;
 import org.apache.commons.vfs.VFS;
 import org.apache.commons.vfs.provider.FileReplicator;
@@ -51,14 +66,28 @@ import org.apache.commons.vfs.provider.res.ResourceFileProvider;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.type.TypeFactory;
+import org.olap4j.mdx.ParseTreeWriter;
+import org.olap4j.mdx.SelectNode;
+import org.olap4j.mdx.parser.impl.DefaultMdxParserImpl;
+import org.saiku.olap.dto.SaikuCube;
+import org.saiku.olap.dto.SaikuDimensionSelection;
+import org.saiku.olap.dto.SaikuMember;
+import org.saiku.olap.dto.SaikuQuery;
+import org.saiku.olap.dto.SaikuSelection;
+import org.saiku.olap.dto.SaikuSelection.Type;
 import org.saiku.olap.dto.SaikuTag;
+import org.saiku.olap.dto.SaikuTuple;
+import org.saiku.olap.util.SaikuProperties;
 import org.saiku.service.olap.OlapQueryService;
+import org.saiku.service.util.KeyValue;
+import org.saiku.service.util.exception.SaikuServiceException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import edu.emory.mathcs.backport.java.util.Collections;
+//import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * QueryServlet contains all the methods required when manipulating an OLAP Query.
@@ -280,6 +309,131 @@ public class BasicTagRepositoryResource {
 			log.error("Cannot get tag " + tagName + " for " + cubeIdentifier ,e);
 		}
 		return null;
+	}
+
+	
+	@GET
+	@Produces({"text/csv" })
+	@Path("/{cubeIdentifier}/{tagName}/export/csv")
+	public Response getDrillthroughExport(			
+			@PathParam("cubeIdentifier") String cubeIdentifier,
+			@PathParam("tagName") String tagName,
+			@QueryParam("maxrows") @DefaultValue("0") Integer maxrows,
+			@QueryParam("returns") String returns,
+			@QueryParam("connection") String connection,
+			@QueryParam("catalog") String catalog,
+			@QueryParam("schema") String schema,
+			@QueryParam("cube") String cube,
+			@QueryParam("additional") String additional
+			)
+	{
+		ResultSet rs = null;
+
+		try {
+            
+			List<Integer> cellPosition = new ArrayList<Integer>();
+			cellPosition.add(0);
+			List<KeyValue<String,String>> additionalColumns = new ArrayList<KeyValue<String,String>>();
+			if (additional != null) {
+				for (String kvs : additional.split(",")) {
+					String[] kv = kvs.split(":");
+					if (kv.length == 2) {
+						additionalColumns.add(new KeyValue<String, String>(kv[0], kv[1]));
+					}
+				}
+			}
+			
+			SaikuTag tag = getTag(cubeIdentifier, tagName);
+			if (tag != null) {
+				String queryName = UUID.randomUUID().toString();
+				SaikuCube saikuCube = new SaikuCube(connection, cube, cube, cube, catalog, schema);
+				olapQueryService.createNewOlapQuery(queryName, saikuCube);
+				SaikuQuery q = olapQueryService.simulateTag(queryName, tag);
+				if (!cube.startsWith("[")) {
+					cube = "[" + cube + "]";
+				}
+				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+				boolean first = true;
+				for (SaikuTuple tuple : tag.getSaikuTuples()) {
+					String mdx = null;
+					for (SaikuMember member : tuple.getSaikuMembers()) {
+						if (mdx == null) {
+							mdx = "SELECT (" + member.getUniqueName();
+						} else {
+							mdx += ", " + member.getUniqueName();
+						}
+					}
+					boolean where = true;
+					if (tag.getSaikuDimensionSelections() != null) {
+						for (SaikuDimensionSelection sdim : tag.getSaikuDimensionSelections()) {
+							if (sdim.getSelections().size() > 1) {
+								where = false;
+							}
+						}
+					}
+					if (where) {
+						mdx += ") ON COLUMNS from " + cube;
+						SelectNode sn = (new DefaultMdxParserImpl().parseSelect(q.getMdx())); 
+						final Writer writer = new StringWriter();
+						sn.getFilterAxis().unparse(new ParseTreeWriter(new PrintWriter(writer)));
+						if (StringUtils.isNotBlank(writer.toString())) {
+							mdx += "\r\nWHERE " + writer.toString();
+						}
+						System.out.println("Executing... :" + mdx);
+						olapQueryService.executeMdx(queryName, mdx);
+						rs = olapQueryService.drillthrough(queryName, cellPosition, maxrows, returns);
+						byte[] doc = olapQueryService.exportResultSetCsv(rs,",","\"", first, additionalColumns);
+						first = false;
+						outputStream.write(doc);
+					} else {
+						if (tag.getSaikuDimensionSelections() != null) {
+							for (SaikuDimensionSelection sdim : tag.getSaikuDimensionSelections()) {
+								for (SaikuSelection ss : sdim.getSelections()) {
+									if (ss.getType() == Type.MEMBER) {
+										String newmdx = mdx;
+										newmdx += "," + ss.getUniqueName() + ") ON COLUMNS from " + cube;
+										System.out.println("Executing... :" + newmdx);
+										olapQueryService.executeMdx(queryName, newmdx);
+										rs = olapQueryService.drillthrough(queryName, cellPosition, maxrows, returns);
+										byte[] doc = olapQueryService.exportResultSetCsv(rs,",","\"", first, additionalColumns);
+										first = false;
+										outputStream.write(doc);
+									}
+								}
+							}
+						}
+					}
+				}
+
+
+				byte csv[] = outputStream.toByteArray();
+				
+				String name = SaikuProperties.webExportCsvName;
+				return Response.ok(csv, MediaType.APPLICATION_OCTET_STREAM).header(
+						"content-disposition",
+						"attachment; filename = " + name + "-drillthrough.csv").header(
+								"content-length",csv.length).build();
+			}
+
+		} catch (Exception e) {
+			log.error("Cannot export drillthrough tag (" + tagName + ")",e);
+			return Response.serverError().build();
+		}
+		
+		finally {
+			if (rs != null) {
+				try {
+					Statement statement = rs.getStatement();
+					statement.close();
+					rs.close();
+				} catch (SQLException e) {
+					throw new SaikuServiceException(e);
+				} finally {
+					rs = null;
+				}
+			}
+		}
+		return Response.serverError().build();
 	}
 
 	

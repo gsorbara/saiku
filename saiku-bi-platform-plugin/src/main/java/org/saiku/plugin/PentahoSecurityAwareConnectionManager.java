@@ -1,37 +1,39 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.plugin;
+
 
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import java.util.Properties;
 
 import mondrian.olap4j.SaikuMondrianHelper;
+import mondrian.olap4j.PentahoSaikuMondrianHelper;
 
 import org.olap4j.OlapConnection;
 import org.pentaho.platform.api.engine.IConnectionUserRoleMapper;
+import org.pentaho.platform.api.repository.ISolutionRepository;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
+import org.pentaho.platform.engine.services.solution.SolutionReposHelper;
+
 import org.pentaho.platform.plugin.services.connections.mondrian.MDXConnection;
 import org.saiku.datasources.connection.AbstractConnectionManager;
 import org.saiku.datasources.connection.ISaikuConnection;
@@ -46,18 +48,26 @@ public class PentahoSecurityAwareConnectionManager extends AbstractConnectionMan
 
 	private List<String> errorConnections = new ArrayList<String>();
 
-	private Boolean userAware;
+	private boolean userAware = true;
+
+	private boolean connectionPooling = true;
+
 
 	@Override
 	public void init() {
 		this.connections = getAllConnections();
 	}
 	
-	public void setUserAware(Boolean aware) {
+	public void setUserAware(boolean aware) {
 		this.userAware = aware;
 	}
 
-	@Override
+	public void setConnectionPooling(boolean pooling) {
+		this.connectionPooling = pooling;
+	}
+	
+/**	TO BE DELETE: sdw-saiku 
+ * @Override
 	protected ISaikuConnection getInternalConnection(String name, SaikuDatasource datasource) {
 		ISaikuConnection con;
 		if (userAware && PentahoSessionHolder.getSession().getName() != null) {
@@ -85,25 +95,70 @@ public class PentahoSecurityAwareConnectionManager extends AbstractConnectionMan
 		}
 		return con;
 	}
+*/
+	@Override
+	protected ISaikuConnection getInternalConnection(String name, SaikuDatasource datasource) {
+		SolutionReposHelper.setSolutionRepositoryThreadVariable(PentahoSystem.get(ISolutionRepository.class, PentahoSessionHolder.getSession()));
+		ISaikuConnection con;
+		try {
+			if (connectionPooling) {
+				if (userAware && PentahoSessionHolder.getSession().getName() != null) {
+					name = name + "-" + PentahoSessionHolder.getSession().getName();
+				}
+				if (!connections.containsKey(name)) {
+					con =  connect(name, datasource);
+					if (con != null) {
+						connections.put(name, con);
+					} else {
+						if (!errorConnections.contains(name)) {
+							errorConnections.add(name);
+						}
+					}
+				} else {
+					con = connections.get(name);
+				}
+			} else {
+				con = connect(name, datasource);
+			}
+
+			if (con != null) {
+				con = applySecurity(con, datasource);
+				return con;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	
 
 	@Override
-	protected void refreshInternalConnection(String name, SaikuDatasource datasource) {
+	protected ISaikuConnection refreshInternalConnection(String name, SaikuDatasource datasource) {
 		try {
-			String newname = name;
-			if (userAware && PentahoSessionHolder.getSession().getName() != null) {
-				newname = name + "-" + PentahoSessionHolder.getSession().getName();
+			ISaikuConnection con;
+			if (connectionPooling) {
+				String newname = name;
+				if (userAware && PentahoSessionHolder.getSession().getName() != null) {
+					newname = name + "-" + PentahoSessionHolder.getSession().getName();
+				}
+				con = connections.remove(newname);
+			} else {
+				con = getInternalConnection(name, datasource);
 			}
-			ISaikuConnection con = connections.remove(newname);
+
 			if (con != null) {
 				con.clearCache();
 			}
 			con = null;
-			getInternalConnection(name, datasource);
+			return getInternalConnection(name, datasource);
+
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		return null;
 	}
 
 	private ISaikuConnection applySecurity(ISaikuConnection con, SaikuDatasource datasource) throws Exception {
@@ -114,12 +169,6 @@ public class PentahoSecurityAwareConnectionManager extends AbstractConnectionMan
 		if (PentahoSystem.getObjectFactory().objectDefined(MDXConnection.MDX_CONNECTION_MAPPER_KEY)) {
 			IConnectionUserRoleMapper mondrianUserRoleMapper = PentahoSystem.get(IConnectionUserRoleMapper.class, MDXConnection.MDX_CONNECTION_MAPPER_KEY, null);
 			if (mondrianUserRoleMapper != null) {
-				String url = datasource.getProperties().getProperty(ISaikuConnection.URL_KEY);
-				url = url.replaceAll(";","\n");
-				StringReader sr = new StringReader(url);
-				Properties props = new Properties();
-				props.load(sr);
-
 				OlapConnection c = (OlapConnection) con.getConnection();
 
 				String[] validMondrianRolesForUser = mondrianUserRoleMapper.mapConnectionRoles(PentahoSessionHolder.getSession(), c.getCatalog());
@@ -136,10 +185,32 @@ public class PentahoSecurityAwareConnectionManager extends AbstractConnectionMan
 	private boolean setRole(ISaikuConnection con, String[] validMondrianRolesForUser, SaikuDatasource datasource) {
 		if (con.getConnection() instanceof OlapConnection) 
 		{
-			OlapConnection c = (OlapConnection) con.getConnection();
-			System.out.println("Setting role to datasource:" + datasource.getName() + " role:" + validMondrianRolesForUser);
 			try {
-				SaikuMondrianHelper.setRoles(c, validMondrianRolesForUser);
+				OlapConnection c = (OlapConnection) con.getConnection();
+				String roles = "";
+				if (validMondrianRolesForUser != null && validMondrianRolesForUser.length > 0) {
+					for (String r : validMondrianRolesForUser) {
+						// lets make sure the role is actually available, just to be safe
+						if (c.getAvailableRoleNames().contains(r)) {
+							roles += r +",";
+						}
+					}
+
+					System.out.println("Setting role to datasource:" + datasource.getName() + " role: " + roles);
+
+					if (validMondrianRolesForUser != null && validMondrianRolesForUser.length == 0) {
+						return true;
+					}
+					else if (validMondrianRolesForUser != null && validMondrianRolesForUser.length == 1) {
+						c.setRoleName(validMondrianRolesForUser[0]);
+					} else {
+						PentahoSaikuMondrianHelper.setRoles(c, validMondrianRolesForUser);
+					}
+				} else {
+					c.setRoleName(null);
+				}
+
+
 				return true;
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.util.formatter;
 
@@ -37,10 +33,14 @@ import org.olap4j.impl.Olap4jUtil;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.Property;
 import org.saiku.olap.dto.resultset.DataCell;
 import org.saiku.olap.dto.resultset.Matrix;
 import org.saiku.olap.dto.resultset.MemberCell;
 
+
+import java.text.DecimalFormat;
+import java.util.*;
 
 public class CellSetFormatter implements ICellSetFormatter {
 	/**
@@ -99,18 +99,7 @@ public class CellSetFormatter implements ICellSetFormatter {
 		public void addLevel(Integer depth, Level level) {
 			depthLevel.put(depth, level);
 		}
-	}
 
-	/**
-	 * @param formattedValue
-	 * @return values
-	 */
-	public static String getValueString(final String formattedValue) {
-		final String[] values = formattedValue.split("\\|"); //$NON-NLS-1$
-		if (values.length > 1) {
-			return values[1];
-		}
-		return values[0];
 	}
 
 	/**
@@ -271,6 +260,9 @@ public class CellSetFormatter implements ICellSetFormatter {
 						memberInfo.setFormattedValue(s);
 						memberInfo.setProperty("__headertype", "row_header_header");
 						memberInfo.setProperty("levelindex", "" + levels.indexOf(xLevel));
+						memberInfo.setHierarchy(xLevel.getHierarchy().getUniqueName());
+						memberInfo.setParentDimension(xLevel.getDimension().getName());
+						memberInfo.setLevel(xLevel.getUniqueName());
 					}
 					matrix.set(x, y, memberInfo);
 				}
@@ -338,7 +330,28 @@ public class CellSetFormatter implements ICellSetFormatter {
 				}
 				// the raw value
 			}
-			cellInfo.setFormattedValue(getValueString(cellValue));
+
+			// Format string is relevant for Excel export
+			// xmla cells can throw an error on this
+			try {
+
+				String formatString = (String) cell.getPropertyValue(Property.StandardCellProperty.FORMAT_STRING);
+				if (formatString != null && !formatString.startsWith("|")) {
+					cellInfo.setFormatString(formatString);
+				} else {
+					formatString = formatString.substring(1, formatString.length());
+					cellInfo.setFormatString(formatString.substring(0, formatString.indexOf("|")));
+				}
+			} catch (Exception e) {
+				// we tried
+			}
+
+            Map<String, String> cellProperties = new HashMap<String, String>();
+			String val = Olap4jUtil.parseFormattedCellValue(cellValue, cellProperties);
+			if (!cellProperties.isEmpty()) {
+				cellInfo.setProperties(cellProperties);
+			}
+			cellInfo.setFormattedValue(val);
 			matrix.set(x, y, cellInfo);
 		}
 		return matrix;
@@ -416,6 +429,8 @@ public class CellSetFormatter implements ICellSetFormatter {
 					memberInfo.setRawValue(member.getCaption());
 					memberInfo.setFormattedValue(member.getCaption()); // First try to get a formatted value
 					memberInfo.setParentDimension(member.getDimension().getName());
+					memberInfo.setHierarchy(member.getHierarchy().getName());
+					memberInfo.setLevel(member.getLevel().getUniqueName());
 					memberInfo.setUniquename(member.getUniqueName());
 //					try {
 //						memberInfo.setChildMemberCount(member.getChildMemberCount());
@@ -479,17 +494,23 @@ public class CellSetFormatter implements ICellSetFormatter {
 							parent = parent.getParentMember();
 						}
 						final MemberCell pInfo = new MemberCell();
+
 						if(parent != null){
 							pInfo.setRawValue(parent.getCaption());
 							pInfo.setFormattedValue(parent.getCaption()); // First try to get a formatted value
 							pInfo.setParentDimension(parent.getDimension().getName());
+							pInfo.setHierarchy(parent.getHierarchy().getName());
+							pInfo.setLevel(parent.getLevel().getUniqueName());
 							pInfo.setUniquename(parent.getUniqueName());
 						}else{ // In case parent is null, leave field is blank
 							pInfo.setRawValue("");
 							pInfo.setFormattedValue("");
 							pInfo.setParentDimension("");
+							pInfo.setHierarchy("");
+							pInfo.setLevel("");
 							pInfo.setUniquename("");
 						}
+
 						matrix.set(x_parent, y_parent, pInfo);
 						if (isColumns) {
 							y_parent--;

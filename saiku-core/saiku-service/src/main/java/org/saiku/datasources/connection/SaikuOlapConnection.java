@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.datasources.connection;
 
@@ -76,7 +72,7 @@ public class SaikuOlapConnection implements ISaikuConnection {
 		OlapConnection tmpolapConnection = (OlapConnection) wrapper.unwrap(OlapConnection.class);
 		System.out.println("name:" + name);
 		System.out.println("driver:" + driver);
-		//System.out.println("url:" + url);
+		System.out.println("url:" + url);
 		System.out.flush();
 
 		if (tmpolapConnection == null) {
@@ -90,8 +86,9 @@ public class SaikuOlapConnection implements ISaikuConnection {
 	}
 	
 	public boolean clearCache() throws Exception {
-		if (SaikuMondrianHelper.isMondrianConnection(olapConnection)) {
-			RolapConnection rcon = SaikuMondrianHelper.getMondrianConnection(olapConnection);
+		if (olapConnection.isWrapperFor(RolapConnection.class)) {
+			System.out.println("Clearing cache");
+			RolapConnection rcon = olapConnection.unwrap(RolapConnection.class);
 			rcon.getCacheControl(null).flushSchemaCache();
 		}
 		return true;

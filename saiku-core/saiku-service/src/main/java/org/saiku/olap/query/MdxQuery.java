@@ -1,26 +1,22 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 
 package org.saiku.olap.query;
 
-import java.util.List;
+
 import java.util.Map;
 import java.util.Properties;
 
@@ -53,6 +49,8 @@ public class MdxQuery implements IQuery {
 	private OlapConnection connection;
 	private String name;
 	private Scenario scenario;
+	private CellSet cellset;
+	private OlapStatement statement;
 	
 	public MdxQuery(OlapConnection con, SaikuCube cube, String name, String mdx) {
 		this.cube = cube;
@@ -67,20 +65,18 @@ public class MdxQuery implements IQuery {
 
 	public SaikuCube getSaikuCube() {
 		try {
-			if (connection != null && mdx != null && mdx.length() > 0) {
-				for (Database db : connection.getOlapDatabases()) {
-					Catalog cat = db.getCatalogs().get(cube.getCatalogName());
-					if (cat != null) {
-						for (Schema schema : cat.getSchemas()) {
-								for (Cube cub : schema.getCubes()) {
-									if (cub.getName().equals(cube.getName()) || cub.getUniqueName().equals(cube.getName())) {
-										cube = new SaikuCube(cube.getConnectionName(),getCube().getUniqueName(), getCube().getName(), cube.getCatalogName(), schema.getName());
-									}
-								}
-							}
-						}
-					}
-				}
+			Cube c = getCube();
+			SaikuCube sc= new SaikuCube(
+					cube.getConnectionName(),
+					c.getUniqueName(), 
+					c.getName(), 
+					c.getCaption(),
+					cube.getCatalogName(), 
+					c.getSchema().getName());
+			if (sc != null) {
+				cube = sc;
+			}
+
 		} catch (Exception e) {
 			// we tried, but it just doesn't work, so let's return the last working cube
 		}
@@ -122,7 +118,14 @@ public class MdxQuery implements IQuery {
 		OlapConnection con = connection;
 		con.setCatalog(getSaikuCube().getCatalogName());
 		OlapStatement stmt = con.createStatement();
-		return stmt.executeOlapQuery(mdx);
+		
+		this.statement = stmt;
+		CellSet cs = stmt.executeOlapQuery(mdx);
+		if (statement != null) {
+			statement.close();
+		}
+		this.statement = null;
+		return cs;
 	}
 
 	public QueryType getType() {
@@ -155,33 +158,36 @@ public class MdxQuery implements IQuery {
 
         String mdx = getMdx();
     	try {
-
-        if (mdx != null && mdx.length() > 0 && mdx.contains("from")) {
-        	SelectNode select =
-        		mdxParser.parseSelect(getMdx());
-        		select = mdxValidator.validateSelect(select);
-        		CubeType cubeType = (CubeType) select.getFrom().getType();
-        		return cubeType.getCube();
-        }
-        else {
-			if (connection != null && mdx != null && mdx.length() > 0) {
-				for (Database db : connection.getOlapDatabases()) {
-					Catalog cat = db.getCatalogs().get(cube.getCatalogName());
-					if (cat != null) {
-						for (Schema schema : cat.getSchemas()) {
-								for (Cube cub : schema.getCubes()) {
-									if (cub.getName().equals(cube.getName()) || cub.getUniqueName().equals(cube.getName())) {
-										return cub;
-									}
-								}
-							}
-						}
-					}
-				}
-        }
+	        if (mdx != null && mdx.length() > 0 && mdx.toUpperCase().contains("FROM")) {
+	        	SelectNode select =
+	        		mdxParser.parseSelect(getMdx());
+	        		select = mdxValidator.validateSelect(select);
+	        		CubeType cubeType = (CubeType) select.getFrom().getType();
+	        		return cubeType.getCube();
+	        }
     	} catch (OlapException e) {
     		e.printStackTrace();
     	}
+    	try {
+			// ok seems like we failed to get the cube, lets try it differently
+	    	if (connection != null && mdx != null && mdx.length() > 0) {
+	    		for (Database db : connection.getOlapDatabases()) {
+	    			Catalog cat = db.getCatalogs().get(cube.getCatalogName());
+	    			if (cat != null) {
+	    				for (Schema schema : cat.getSchemas()) {
+	    					for (Cube cub : schema.getCubes()) {
+	    						if (cub.getName().equals(cube.getName()) || cub.getUniqueName().equals(cube.getName())) {
+	    							return cub;
+	    						}
+	    					}
+	    				}
+	    			}
+	    		}
+	    	}
+    	} catch (OlapException e) {
+    		e.printStackTrace();
+		}
+
 		return null;
 	}
 
@@ -228,8 +234,29 @@ public class MdxQuery implements IQuery {
 	public void removeTag() {
 	}
 
-	public void cancel() throws Exception {
-		// TODO Auto-generated method stub
+	public void storeCellset(CellSet cs) {
+		this.cellset = cs;
 		
 	}
+
+	public CellSet getCellset() {
+		return cellset;
+	}
+
+	public void setStatement(OlapStatement os) {
+		this.statement = os;
+		
+	}
+
+	public OlapStatement getStatement() {
+		return this.statement;
+	}
+	
+	public void cancel() throws Exception {
+		if (this.statement != null && !this.statement.isClosed()) {
+			statement.close();
+		}
+		this.statement = null;
+	}
+
 }

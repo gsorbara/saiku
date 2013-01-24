@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.discover;
 
@@ -40,6 +36,7 @@ import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
 import org.saiku.datasources.connection.IConnectionManager;
+
 import org.saiku.olap.dto.PropertySaikuMember;
 import org.saiku.olap.dto.SaikuCatalog;
 import org.saiku.olap.dto.SaikuConnection;
@@ -50,6 +47,9 @@ import org.saiku.olap.dto.SaikuLevel;
 import org.saiku.olap.dto.SaikuMember;
 import org.saiku.olap.dto.SaikuSchema;
 import org.saiku.olap.util.ObjectUtil;
+
+import org.saiku.olap.util.SaikuCubeCaptionComparator;
+import org.saiku.olap.util.SaikuDimensionCaptionComparator;
 import org.saiku.olap.util.SaikuMemberCaptionComparator;
 import org.saiku.olap.util.exception.SaikuOlapException;
 
@@ -73,9 +73,9 @@ public class OlapMetaExplorer {
 						for (Schema schem : cat.getSchemas()) {
 							List<SaikuCube> cubes = new ArrayList<SaikuCube>();
 							for (Cube cub : schem.getCubes()) {
-								cubes.add(new SaikuCube(connectionName, cub.getUniqueName(), cub.getName(), cat.getName(), schem.getName()));
+								cubes.add(new SaikuCube(connectionName, cub.getUniqueName(), cub.getName(), cub.getCaption(), cat.getName(), schem.getName(), cub.isVisible()));
 							}
-							Collections.sort(cubes);
+							Collections.sort(cubes, new SaikuCubeCaptionComparator());
 							schemas.add(new SaikuSchema(schem.getName(),cubes));
 						}
 						if (schemas.size() == 0) {
@@ -87,10 +87,9 @@ public class OlapMetaExplorer {
 								while(cubesResult.next()) {
 
 									cubes.add(new SaikuCube(connectionName, cubesResult.getString("CUBE_NAME"),cubesResult.getString("CUBE_NAME"),
-											cubesResult.getString("CATALOG_NAME"),cubesResult.getString("SCHEMA_NAME")));
-
+											cubesResult.getString("CUBE_NAME"), cubesResult.getString("CATALOG_NAME"),cubesResult.getString("SCHEMA_NAME")));
 								}
-								Collections.sort(cubes);
+								Collections.sort(cubes, new SaikuCubeCaptionComparator());
 								schemas.add(new SaikuSchema("",cubes));
 							} catch (SQLException e) {
 								throw new OlapException(e.getMessage(),e);
@@ -143,7 +142,7 @@ public class OlapMetaExplorer {
 				for (Catalog cat : olapcon.getOlapCatalogs()) {
 					for (Schema schem : cat.getSchemas()) {
 						for (Cube cub : schem.getCubes()) {
-							cubes.add(new SaikuCube(connectionName, cub.getUniqueName(), cub.getName(), cat.getName(), schem.getName()));
+							cubes.add(new SaikuCube(connectionName, cub.getUniqueName(), cub.getName(), cub.getCaption(), cat.getName(), schem.getName(), cub.isVisible()));
 						}
 					}
 				}
@@ -152,7 +151,8 @@ public class OlapMetaExplorer {
 				e.printStackTrace();
 			}
 		}
-		Collections.sort(cubes);
+
+		Collections.sort(cubes, new SaikuCubeCaptionComparator());
 		return cubes;
 
 	}
@@ -162,7 +162,7 @@ public class OlapMetaExplorer {
 		for (String connectionName : connectionNames) {
 			cubesList.addAll(getCubes(connectionName));
 		}
-		Collections.sort(cubesList);
+		Collections.sort(cubesList, new SaikuCubeCaptionComparator());
 		return cubesList;
 	}
 
@@ -171,7 +171,8 @@ public class OlapMetaExplorer {
 		for (String connectionName : connections.getAllOlapConnections().keySet()) {
 			cubes.addAll(getCubes(connectionName));
 		}
-		Collections.sort(cubes);
+
+		Collections.sort(cubes, new SaikuCubeCaptionComparator());
 		return cubes;
 	}
 
@@ -222,7 +223,8 @@ public class OlapMetaExplorer {
 				break;
 			}
 		}
-		Collections.sort(dimensions);
+
+		Collections.sort(dimensions, new SaikuDimensionCaptionComparator());
 		return dimensions;
 	}
 
@@ -367,6 +369,7 @@ public class OlapMetaExplorer {
 
 	}
 
+
 	public List<SaikuMember> getMemberChildren(SaikuCube cube, String uniqueMemberName) throws SaikuOlapException {
 		List<SaikuMember> members = new ArrayList<SaikuMember>();
 		try {
@@ -391,7 +394,9 @@ public class OlapMetaExplorer {
 		try {
 			Cube nativeCube = getNativeCube(cube);
 			for (Measure measure : nativeCube.getMeasures()) {
-				measures.add(ObjectUtil.convert(measure));
+				if(measure.isVisible()) {
+					measures.add(ObjectUtil.convert(measure));
+				}
 			}
 			if (measures.size() == 0) {
 				Hierarchy hierarchy = nativeCube.getDimensions().get("Measures").getDefaultHierarchy();

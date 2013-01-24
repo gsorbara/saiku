@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.util.formatter;
 
@@ -37,9 +33,16 @@ import org.olap4j.impl.Olap4jUtil;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.Property;
+
 import org.saiku.olap.dto.resultset.DataCell;
 import org.saiku.olap.dto.resultset.Matrix;
 import org.saiku.olap.dto.resultset.MemberCell;
+import org.saiku.olap.util.SaikuProperties;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 
 public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 	/**
@@ -112,6 +115,7 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 		}
 		return values[0];
 	}
+
 
 	/**
 	 * Returns an iterator over cells in a result.
@@ -271,7 +275,9 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 						memberInfo.setFormattedValue(s);
 						memberInfo.setProperty("__headertype", "row_header_header");
 						memberInfo.setProperty("levelindex", "" + levels.indexOf(xLevel));
-
+						memberInfo.setHierarchy(xLevel.getHierarchy().getUniqueName());
+						memberInfo.setParentDimension(xLevel.getDimension().getName());
+						memberInfo.setLevel(xLevel.getUniqueName());
 					}
 					matrix.set(x, y, memberInfo);
 				}
@@ -329,6 +335,7 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 			//            }
 
 
+
 			if (cell.getValue() != null) {
 				try {
 					cellInfo.setRawNumber(cell.getDoubleValue());
@@ -347,7 +354,21 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 					cellValue = ""; //$NON-NLS-1$
 				else {
 					try {
-						DecimalFormat myFormatter = new DecimalFormat("#,###.###"); //$NON-NLS-1$
+						
+						// this needs to become query / execution specific
+						DecimalFormat myFormatter = new DecimalFormat(SaikuProperties.formatDefautNumberFormat); //$NON-NLS-1$
+						DecimalFormatSymbols dfs = new DecimalFormatSymbols(SaikuProperties.locale);
+						myFormatter.setDecimalFormatSymbols(dfs);
+						
+						/** TO BE DELETE: sdw-version
+						 *  DecimalFormat myFormatter = new DecimalFormat("#,###.###"); //$NON-NLS-1$*/
+						/**  TO BE DELETE: osbi-saiku 
+						 * this needs to become query / execution specific
+						DecimalFormat myFormatter = new DecimalFormat(SaikuProperties.formatDefautNumberFormat); //$NON-NLS-1$
+						DecimalFormatSymbols dfs = new DecimalFormatSymbols(SaikuProperties.locale);
+						myFormatter.setDecimalFormatSymbols(dfs);*/
+						
+						
 						String output = myFormatter.format(cell.getValue());
 						cellValue = output;
 					}
@@ -357,8 +378,36 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 				}
 				// the raw value
 			}
+			
+			// sdw-saiku existing
 			cellInfo.setFormattedValue(getValueString(cellValue));
+			
+			// osbi-saiku
+			// Format string is relevant for Excel export
+			// xmla cells can throw an error on this
+			/*try {
+
+				String formatString = (String) cell.getPropertyValue(Property.StandardCellProperty.FORMAT_STRING);
+				if (formatString != null && !formatString.startsWith("|")) {
+					cellInfo.setFormatString(formatString);
+				} else {
+					formatString = formatString.substring(1, formatString.length());
+					cellInfo.setFormatString(formatString.substring(0, formatString.indexOf("|")));
+				}
+			} catch (Exception e) {
+				// we tried
+			}
+
+            Map<String, String> cellProperties = new HashMap<String, String>();
+			String val = Olap4jUtil.parseFormattedCellValue(cellValue, cellProperties);
+			if (!cellProperties.isEmpty()) {
+				cellInfo.setProperties(cellProperties);
+			}
+			cellInfo.setFormattedValue(val);*/
+			
+			
 			matrix.set(x, y, cellInfo);
+			
 		}
 		return matrix;
 
@@ -435,6 +484,8 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 					memberInfo.setFormattedValue(member.getCaption()); // First try to get a formatted value
 					memberInfo.setParentDimension(member.getDimension().getName());
 					memberInfo.setUniquename(member.getUniqueName());
+					memberInfo.setHierarchy(member.getHierarchy().getName());
+					memberInfo.setLevel(member.getLevel().getUniqueName());
 //					try {
 //						memberInfo.setChildMemberCount(member.getChildMemberCount());
 //					} catch (OlapException e) {

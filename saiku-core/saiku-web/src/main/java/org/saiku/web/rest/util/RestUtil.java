@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 
 package org.saiku.web.rest.util;
@@ -23,6 +19,7 @@ package org.saiku.web.rest.util;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.saiku.olap.dto.resultset.AbstractBaseCell;
@@ -36,14 +33,21 @@ import org.saiku.web.rest.objects.resultset.QueryResult;
 public class RestUtil {
 	
 	public static QueryResult convert(ResultSet rs) {
+		return convert(rs, 0);
+	}
+
+	public static QueryResult convert(ResultSet rs, int limit) {
+
 		Integer width = 0;
         Integer height = 0;
+        
         Cell[] header = null;
         ArrayList<Cell[]> rows = new ArrayList<Cell[]>();
         
         // System.out.println("DATASET");
         try {
-			while (rs.next()) {
+
+			while (rs.next() && (limit == 0 || height < limit)) {
 			    if (height == 0) {
 			        width = rs.getMetaData().getColumnCount();
 			        header = new Cell[width];
@@ -73,7 +77,13 @@ public class RestUtil {
 		
 		return new QueryResult(rows,0,width,height);
 	}
+
+	
 	public static QueryResult convert(CellDataSet cellSet) {
+		return convert(cellSet, 0);
+	}
+	
+	public static QueryResult convert(CellDataSet cellSet, int limit) {
 		ArrayList<Cell[]> rows = new ArrayList<Cell[]>();
 		if (cellSet == null || cellSet.getCellSetBody() == null || cellSet.getCellSetHeaders() == null) {
 			return null;
@@ -86,10 +96,11 @@ public class RestUtil {
 		for (AbstractBaseCell header[] : headers) {
 			rows.add(convert(header, Cell.Type.COLUMN_HEADER));
 		}
-		
-		for (AbstractBaseCell row[] : body) {
+		for (int i = 0; i < body.length && (limit == 0 || i < limit) ; i++) {
+			AbstractBaseCell[] row = body[i];
 			rows.add(convert(row, Cell.Type.ROW_HEADER));
 		}
+
 		QueryResult qr = new QueryResult(rows, cellSet.getRuntime(), cellSet.getWidth(), cellSet.getHeight());
 		return qr;
 		
@@ -121,15 +132,13 @@ public class RestUtil {
 				if (position != null) {
 					metaprops.put("position", position);
 				}
-				
-//				metaprops.put("formattedValue", "" + dcell.getFormattedValue());
-				// metaprops.put("rawValue", "" + dcell.getRawValue());
+	
 				if (dcell != null && dcell.getRawNumber() != null) {
 					metaprops.put("raw", "" + dcell.getRawNumber());
-				}
+				}				
 				
-//				Properties props = new Properties();
-//				props.putAll(dcell.getProperties());
+				metaprops.putAll(dcell.getProperties());
+
 				
 				// TODO no properties  (NULL) for now - 
 				return new Cell(dcell.getFormattedValue(), metaprops, Cell.Type.DATA_CELL);
@@ -140,12 +149,20 @@ public class RestUtil {
 				Properties props = new Properties();
 				if ( mcell != null && mcell.getProperty("levelindex") != null) {
 					props.put("levelindex", mcell.getProperty("levelindex"));
+
 					if (mcell.getParentDimension() != null) {
 						props.put("dimension", mcell.getParentDimension());
 					}
 					if (mcell.getUniqueName() != null) {
 						props.put("uniquename", mcell.getUniqueName());
 					}
+					if (mcell.getHierarchy() != null) {
+						props.put("hierarchy", mcell.getHierarchy());
+					}
+					if (mcell.getLevel() != null) {
+						props.put("level", mcell.getLevel());
+					}
+
 				}
 
 				props.putAll(mcell.getFaoProperties());
@@ -183,6 +200,7 @@ public class RestUtil {
 				}
 				return new Cell("" + mcell.getFormattedValue(), props, headertype);
 			}
+
 		}
 		return null;
 	}

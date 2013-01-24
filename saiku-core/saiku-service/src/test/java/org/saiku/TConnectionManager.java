@@ -59,10 +59,11 @@ public class TConnectionManager extends AbstractConnectionManager {
     }
 
     @Override
-    protected void refreshInternalConnection(String name, SaikuDatasource datasource) {
+    protected ISaikuConnection refreshInternalConnection(String name, SaikuDatasource datasource) {
         // TODO Auto-generated method stub
-        
+    	return null;        
     }
+    
     private ISaikuConnection connect(String name, SaikuDatasource datasource) {
         try {
             ISaikuConnection con = SaikuConnectionFactory.getConnection(datasource);

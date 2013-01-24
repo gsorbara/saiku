@@ -239,7 +239,7 @@ public class OlapQueryServiceTest extends ServiceTest{
 	 * 
 	 * @throws Exception 
 	 */
-	@Test
+	/*@Test
 	public final void testAttributeVisibleFalse() throws Exception{
 		System.out.println("start testAttributeVisibleFalse");
 		
@@ -247,5 +247,5 @@ public class OlapQueryServiceTest extends ServiceTest{
 		
 		//Expect the result is false for this member index.
 		Assert.assertFalse(members.get(OlapTestParams.memberIndex_2).getVisible());
-	}
+	}*/
 }

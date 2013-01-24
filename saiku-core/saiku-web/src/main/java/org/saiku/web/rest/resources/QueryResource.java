@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.web.rest.resources;
 
@@ -56,6 +52,7 @@ import org.saiku.olap.dto.SaikuCube;
 import org.saiku.olap.dto.SaikuDimensionSelection;
 import org.saiku.olap.dto.SaikuQuery;
 import org.saiku.olap.dto.SaikuTag;
+import org.saiku.olap.dto.SaikuMember;
 import org.saiku.olap.dto.resultset.CellDataSet;
 import org.saiku.olap.util.SaikuProperties;
 import org.saiku.olap.util.formatter.CellSetFormatter;
@@ -172,7 +169,8 @@ public class QueryResource {
 		if (log.isDebugEnabled()) {
 			log.debug("TRACK\t"  + "\t/query/" + queryName + "\tPOST\t xml:" + (xml == null));
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName, catalogName, schemaName);
+
+		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
 		if (xml != null && xml.length() > 0) {
 			return olapQueryService.createNewOlapQuery(queryName, xml);
 		}
@@ -333,18 +331,18 @@ public class QueryResource {
 			return Response.serverError().build();
 		}
 	}
-
+	
 	@GET
 	@Produces({"application/json" })
 	@Path("/{queryname}/result")
-	public QueryResult execute(@PathParam("queryname") String queryName){
+	public QueryResult execute(@PathParam("queryname") String queryName, @QueryParam("limit") @DefaultValue("0") int limit){
 		if (log.isDebugEnabled()) {
 			log.debug("TRACK\t"  + "\t/query/" + queryName + "/result\tGET");
 		}
 		try {
 
 			CellDataSet cs = olapQueryService.execute(queryName);
-			return RestUtil.convert(cs);
+			return RestUtil.convert(cs, limit);
 		}
 		catch (Exception e) {
 			log.error("Cannot execute query (" + queryName + ")",e);
@@ -359,7 +357,8 @@ public class QueryResource {
 	public QueryResult executeMdx(
 			@PathParam("queryname") String queryName,
 			@PathParam("format") String formatter,
-			@FormParam("mdx") String mdx) 
+			@FormParam("mdx") String mdx, 
+			@FormParam("limit") @DefaultValue("0") int limit) 
 	{
 		if (log.isDebugEnabled()) {
 			log.debug("TRACK\t"  + "\t/query/" + queryName + "/result"+formatter+"\tPOST");
@@ -380,12 +379,15 @@ public class QueryResource {
 				icf = new FlattenedFaoCellSetFormatter();
 			} 
 			else {
+
 				icf = new FlattenedCellSetFormatter();
 			}
 
 			olapQueryService.qm2mdx(queryName);
-			CellDataSet cs = olapQueryService.executeMdx(queryName, mdx, icf);
-			return RestUtil.convert(cs);
+
+			CellDataSet cs = olapQueryService.executeMdx(queryName,mdx, icf);
+			return RestUtil.convert(cs, limit);
+
 		}
 		catch (Exception e) {
 			log.error("Cannot execute query (" + queryName + ") using mdx:\n" + mdx,e);
@@ -399,7 +401,8 @@ public class QueryResource {
 	@Path("/{queryname}/result")
 	public QueryResult executeMdx(
 			@PathParam("queryname") String queryName,
-			@FormParam("mdx") String mdx)
+			@FormParam("mdx") String mdx,
+			@FormParam("limit") @DefaultValue("0") int limit)
 	{
 		if (log.isDebugEnabled()) {
 			log.debug("TRACK\t"  + "\t/query/" + queryName + "/result\tPOST\t"+mdx);
@@ -407,12 +410,39 @@ public class QueryResource {
 		try {
 			olapQueryService.qm2mdx(queryName);
 			CellDataSet cs = olapQueryService.executeMdx(queryName,mdx);
-			return RestUtil.convert(cs);
+			return RestUtil.convert(cs, limit);
+
 		}
 		catch (Exception e) {
 			log.error("Cannot execute query (" + queryName + ") using mdx:\n" + mdx,e);
 			String error = ExceptionUtils.getRootCauseMessage(e);
 			return new QueryResult(error);
+		}
+	}	
+	
+	@GET
+	@Produces({"application/json" })
+	@Path("/{queryname}/result/metadata/dimensions/{dimension}/hierarchies/{hierarchy}/levels/{level}")
+	public Response getLevelMembers(
+			@PathParam("queryname") String queryName, 
+			@PathParam("dimension") String dimensionName, 
+			@PathParam("hierarchy") String hierarchyName,
+			@PathParam("level") String levelName,
+			@QueryParam("result") @DefaultValue("true") boolean result)
+	{
+		if (log.isDebugEnabled()) {
+			log.debug("TRACK\t" 
+					+ "\t/query/" + queryName + "/result/metadata/dimensions/" + dimensionName 
+					+ "/hierarchies/" + hierarchyName + "/levels/" + levelName + "\tGET");
+		}
+		try {
+			List<SaikuMember> ms = olapQueryService.getResultMetadataMembers(queryName, result, dimensionName, hierarchyName, levelName);
+			return Response.ok(ms).build();
+		}
+		catch (Exception e) {
+			log.error("Cannot execute query (" + queryName + ")",e);
+			String error = ExceptionUtils.getRootCauseMessage(e);
+			return Response.serverError().entity(error).build();
 		}
 	}
 
@@ -434,6 +464,35 @@ public class QueryResource {
 		return null;
 	}
 
+	@GET
+	@Produces({"application/json" })
+	@Path("/{queryname}/explain")
+	public QueryResult getExplainPlan(@PathParam("queryname") String queryName)
+	{
+		if (log.isDebugEnabled()) {
+			log.debug("TRACK\t"  + "\t/query/" + queryName + "/explain\tGET");
+		}
+		QueryResult rsc;
+		ResultSet rs = null;
+		try {
+			Long start = (new Date()).getTime();
+			rs = olapQueryService.explain(queryName);
+			rsc = RestUtil.convert(rs);
+			Long runtime = (new Date()).getTime()- start;
+			rsc.setRuntime(runtime.intValue());
+
+		}
+		catch (Exception e) {
+			log.error("Cannot get explain plan for query (" + queryName + ")",e);
+			String error = ExceptionUtils.getRootCauseMessage(e);
+			rsc =  new QueryResult(error);
+
+		}
+		// no need to close resultset, its an EmptyResultset
+		return rsc;
+	}
+
+	
 	@GET
 	@Produces({"application/json" })
 	@Path("/{queryname}/drillthrough")
@@ -491,7 +550,6 @@ public class QueryResource {
 
 	}
 
-
 	@GET
 	@Produces({"text/csv" })
 	@Path("/{queryname}/drillthrough/export/csv")
@@ -520,6 +578,7 @@ public class QueryResource {
 
 				rs = olapQueryService.drillthrough(queryName, cellPosition, maxrows, returns);
 			}
+			
 			byte[] doc = olapQueryService.exportResultSetCsv(rs);
 			String name = SaikuProperties.webExportCsvName;
 			return Response.ok(doc, MediaType.APPLICATION_OCTET_STREAM).header(
@@ -549,18 +608,22 @@ public class QueryResource {
 
 	}
 
+
 	@GET
 	@Produces({"application/json" })
 	@Path("/{queryname}/result/{format}")
 	public QueryResult execute(
 			@PathParam("queryname") String queryName,
-			@PathParam("format") String formatter){
+			@PathParam("format") String formatter,
+			@QueryParam("limit") @DefaultValue("0") int limit)
+	{
+
 		if (log.isDebugEnabled()) {
 			log.debug("TRACK\t"  + "\t/query/" + queryName + "/result"+formatter+"\tGET");
 		}
 		try {
 			CellDataSet cs = olapQueryService.execute(queryName,formatter);
-			return RestUtil.convert(cs);
+			return RestUtil.convert(cs, limit);
 		}
 		catch (Exception e) {
 			log.error("Cannot execute query (" + queryName + ")",e);
@@ -656,6 +719,7 @@ public class QueryResource {
 		}
 
 		olapQueryService.setCellValue(queryName, cellPosition, value, null);
+
 		return Status.OK;
 
 	}
@@ -750,7 +814,8 @@ public class QueryResource {
 			@PathParam("dimension") String dimensionName, 
 			@FormParam("selections") String selectionJSON) {
 		if (log.isDebugEnabled()) {
-			log.debug("TRACK\t"  + "\t/query/" + queryName + "/axis/"+axisName+"/dimension/"+dimensionName+"\tPUT");
+			log.debug("TRACK\t"  + "\t/query/" + queryName + "/axis/"+axisName+"/dimension/"+dimensionName+"\tPUT\t" + selectionJSON);
+
 		}
 		try{
 			if (selectionJSON != null) {
@@ -759,7 +824,7 @@ public class QueryResource {
 
 
 
-				for (SelectionRestObject selection : selections) {
+				/*for (SelectionRestObject selection : selections) {
 					if (selection.getType() != null && "member".equals(selection.getType().toLowerCase())) {
 						if (selection.getAction() != null && "add".equals(selection.getAction().toLowerCase())) {
 							includeMember("MEMBER", queryName, axisName, dimensionName, selection.getUniquename(), -1, -1);
@@ -776,16 +841,44 @@ public class QueryResource {
 							removeLevel(queryName, axisName, dimensionName, selection.getHierarchy(), selection.getUniquename());
 						}
 					}
+				}*/
+
+				// remove stuff first, then add, removing removes all selections for that level first
+				for (SelectionRestObject selection : selections) {
+					if (selection.getType() != null && "member".equals(selection.getType().toLowerCase())) {
+						if (selection.getAction() != null && "delete".equals(selection.getAction().toLowerCase())) {
+							olapQueryService.removeMember(queryName, dimensionName, selection.getUniquename(), "MEMBER");
+						}
+					}
+					if (selection.getType() != null && "level".equals(selection.getType().toLowerCase())) {
+						if (selection.getAction() != null && "delete".equals(selection.getAction().toLowerCase())) {
+							olapQueryService.removeLevel(queryName, dimensionName, selection.getHierarchy(), selection.getUniquename());
+						}
+					}
 				}
+				for (SelectionRestObject selection : selections) {
+					if (selection.getType() != null && "member".equals(selection.getType().toLowerCase())) {
+						if (selection.getAction() != null && "add".equals(selection.getAction().toLowerCase())) {
+							olapQueryService.includeMember(queryName, dimensionName, selection.getUniquename(), "MEMBER", -1);
+						}
+					}
+					if (selection.getType() != null && "level".equals(selection.getType().toLowerCase())) {
+						if (selection.getAction() != null && "add".equals(selection.getAction().toLowerCase())) {
+							olapQueryService.includeLevel(queryName, dimensionName, selection.getHierarchy(), selection.getUniquename());
+						}
+					}
+				}
+				SaikuDimensionSelection dimsels = getAxisDimensionInfo(queryName, axisName, dimensionName);
+				if (dimsels != null && dimsels.getSelections().size() == 0) {
+					moveDimension(queryName, "UNUSED", dimensionName, -1);
+				}
+				
 				return Status.OK;
 			}
 		} catch (Exception e){
 			log.error("Cannot updates selections for query (" + queryName + ")",e);
 		}
 		return Status.INTERNAL_SERVER_ERROR;
-
-
-
 	}
 
 	@DELETE
@@ -868,6 +961,10 @@ public class QueryResource {
 		try{
 			boolean ret = olapQueryService.removeMember(queryName, dimensionName, uniqueMemberName, selectionType);
 			if(ret == true){
+				SaikuDimensionSelection dimsels = olapQueryService.getAxisDimensionSelections(queryName, axisName, dimensionName);
+				if (dimsels != null && dimsels.getSelections().size() == 0) {
+					olapQueryService.moveDimension(queryName, "UNUSED", dimensionName, -1);
+				}
 				return Status.OK;
 			}
 			else{
@@ -925,7 +1022,12 @@ public class QueryResource {
 		}
 		try{
 			boolean ret = olapQueryService.removeLevel(queryName, dimensionName, uniqueHierarchyName, uniqueLevelName);
+			
 			if(ret == true){
+				SaikuDimensionSelection dimsels = olapQueryService.getAxisDimensionSelections(queryName, axisName, dimensionName);
+				if (dimsels != null && dimsels.getSelections().size() == 0) {
+					olapQueryService.moveDimension(queryName, "UNUSED", dimensionName, -1);
+				}
 				return Status.OK;
 			}
 			else{
@@ -1030,5 +1132,5 @@ public class QueryResource {
 			return Response.Status.INTERNAL_SERVER_ERROR;
 		}
 	}
-
+	
 }
