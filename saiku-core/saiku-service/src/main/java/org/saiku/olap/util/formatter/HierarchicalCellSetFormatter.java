@@ -16,6 +16,7 @@
 package org.saiku.olap.util.formatter;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,15 +35,10 @@ import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Property;
-
 import org.saiku.olap.dto.resultset.DataCell;
 import org.saiku.olap.dto.resultset.Matrix;
 import org.saiku.olap.dto.resultset.MemberCell;
 import org.saiku.olap.util.SaikuProperties;
-
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.*;
 
 public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 	/**
@@ -360,15 +356,6 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 						DecimalFormatSymbols dfs = new DecimalFormatSymbols(SaikuProperties.locale);
 						myFormatter.setDecimalFormatSymbols(dfs);
 						
-						/** TO BE DELETE: sdw-version
-						 *  DecimalFormat myFormatter = new DecimalFormat("#,###.###"); //$NON-NLS-1$*/
-						/**  TO BE DELETE: osbi-saiku 
-						 * this needs to become query / execution specific
-						DecimalFormat myFormatter = new DecimalFormat(SaikuProperties.formatDefautNumberFormat); //$NON-NLS-1$
-						DecimalFormatSymbols dfs = new DecimalFormatSymbols(SaikuProperties.locale);
-						myFormatter.setDecimalFormatSymbols(dfs);*/
-						
-						
 						String output = myFormatter.format(cell.getValue());
 						cellValue = output;
 					}
@@ -379,13 +366,10 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 				// the raw value
 			}
 			
-			// sdw-saiku existing
-			cellInfo.setFormattedValue(getValueString(cellValue));
-			
-			// osbi-saiku
+		
 			// Format string is relevant for Excel export
 			// xmla cells can throw an error on this
-			/*try {
+			try {
 
 				String formatString = (String) cell.getPropertyValue(Property.StandardCellProperty.FORMAT_STRING);
 				if (formatString != null && !formatString.startsWith("|")) {
@@ -403,7 +387,7 @@ public class HierarchicalCellSetFormatter implements ICellSetFormatter {
 			if (!cellProperties.isEmpty()) {
 				cellInfo.setProperties(cellProperties);
 			}
-			cellInfo.setFormattedValue(val);*/
+			cellInfo.setFormattedValue(val);
 			
 			
 			matrix.set(x, y, cellInfo);
