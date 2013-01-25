@@ -70,10 +70,10 @@ public class SaikuOlapConnection implements ISaikuConnection {
 		connection = (OlapConnection) DriverManager.getConnection(url, username,password);
 		final OlapWrapper wrapper = connection;
 		OlapConnection tmpolapConnection = (OlapConnection) wrapper.unwrap(OlapConnection.class);
-		System.out.println("name:" + name);
-		System.out.println("driver:" + driver);
-		System.out.println("url:" + url);
-		System.out.flush();
+		//System.out.println("name:" + name);
+		//System.out.println("driver:" + driver);
+		//System.out.println("url:" + url);
+		//System.out.flush();
 
 		if (tmpolapConnection == null) {
 			throw new Exception("Connection is null");

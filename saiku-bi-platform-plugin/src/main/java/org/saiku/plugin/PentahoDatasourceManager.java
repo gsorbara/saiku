@@ -21,15 +21,12 @@ import java.util.Map;
 import java.util.Properties;
 
 import mondrian.olap.MondrianProperties;
-<<<<<<< HEAD
 
-=======
 import mondrian.olap.Util;
 import mondrian.olap.Util.PropertyList;
 import mondrian.rolap.RolapConnectionProperties;
 
 import org.apache.commons.lang.StringUtils;
->>>>>>> osbi_release_2.4
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Attribute;
@@ -41,10 +38,6 @@ import org.pentaho.platform.engine.services.solution.PentahoEntityResolver;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
 import org.saiku.datasources.connection.ISaikuConnection;
 import org.saiku.datasources.datasource.SaikuDatasource;
-<<<<<<< HEAD
-import org.saiku.plugin.util.PentahoDatasourceProcessor;
-=======
->>>>>>> osbi_release_2.4
 import org.saiku.service.datasource.IDatasourceManager;
 import org.xml.sax.EntityResolver;
 
