@@ -137,7 +137,7 @@ public class RestUtil {
 					metaprops.put("raw", "" + dcell.getRawNumber());
 				}				
 				
-				metaprops.putAll(dcell.getProperties());
+				//metaprops.putAll(dcell.getProperties());
 
 				
 				// TODO no properties  (NULL) for now - 
@@ -189,6 +189,12 @@ public class RestUtil {
 					}
 					if (mcell.getUniqueName() != null) {
 						props.put("uniquename", mcell.getUniqueName());
+					}
+					if (mcell.getHierarchy() != null) {
+						props.put("hierarchy", mcell.getHierarchy());
+					}
+					if (mcell.getLevel() != null) {
+						props.put("level", mcell.getLevel());
 					}
 				}
 				
