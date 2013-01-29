@@ -3,12 +3,12 @@
 	<parent>
 		<artifactId>saiku-core</artifactId>
 		<groupId>org.saiku</groupId>
-		<version>2.4-SNAPSHOT</version>
+		<version>2.4</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.saiku</groupId>
 	<artifactId>saiku-webapp</artifactId>
-	<version>2.4-SNAPSHOT</version>
+	<version>2.4</version>
 	<name>saiku - webapp</name>
 	<packaging>war</packaging>
 
@@ -32,7 +32,7 @@
 			<properties>
 
 				<!-- APPLICATION PROPERTIES -->
-				<techcdr.saikufao.rest.client.host>http://hqldvtcdras1.hq.un.fao.org:8080</techcdr.saikufao.rest.client.host>
+				<techcdr.saikufao.rest.client.host>http://localhost:8081</techcdr.saikufao.rest.client.host>
 
 			</properties>
 		</profile>
