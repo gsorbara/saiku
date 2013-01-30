@@ -394,9 +394,13 @@ public class OlapMetaExplorer {
 		try {
 			Cube nativeCube = getNativeCube(cube);
 			for (Measure measure : nativeCube.getMeasures()) {
+				/* 
+				 * comment for skip non visible measure
 				if(measure.isVisible()) {
 					measures.add(ObjectUtil.convert(measure));
 				}
+				*/
+				measures.add(ObjectUtil.convert(measure));
 			}
 			if (measures.size() == 0) {
 				Hierarchy hierarchy = nativeCube.getDimensions().get("Measures").getDefaultHierarchy();
