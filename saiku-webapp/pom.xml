@@ -32,7 +32,7 @@
 			<properties>
 
 				<!-- APPLICATION PROPERTIES -->
-				<techcdr.saikufao.rest.client.host>http://localhost:8081</techcdr.saikufao.rest.client.host>
+				<techcdr.saikufao.rest.client.host>http://hqldvtcdras1.hq.un.fao.org:8080</techcdr.saikufao.rest.client.host>
 
 			</properties>
 		</profile>

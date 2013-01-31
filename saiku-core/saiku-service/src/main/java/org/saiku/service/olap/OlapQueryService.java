@@ -582,11 +582,11 @@ public class OlapQueryService implements Serializable {
 				s = con.createScenario();
 				query.setScenario(s);
 				con.setScenario(s);
-				System.out.println("Created scenario:" + s + " : cell:" + position + " value" + value);
+				//System.out.println("Created scenario:" + s + " : cell:" + position + " value" + value);
 			} else {
 				s = query.getScenario();
 				con.setScenario(s);
-				System.out.println("Using scenario:" + s + " : cell:" + position + " value" + value);
+				//System.out.println("Using scenario:" + s + " : cell:" + position + " value" + value);
 
 			}
 
