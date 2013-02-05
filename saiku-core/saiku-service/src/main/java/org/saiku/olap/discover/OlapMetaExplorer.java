@@ -20,7 +20,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapDatabaseMetaData;
@@ -334,7 +336,7 @@ public class OlapMetaExplorer {
 			log.error(msg, e);
 			throw new SaikuOlapException(msg, e);
 		}
-		
+
 		Integer[] childMemberCount = new Integer[membersUpper.size()];
 		Arrays.fill(childMemberCount, new Integer(0));
 		
@@ -342,6 +344,14 @@ public class OlapMetaExplorer {
 		if(lower == null) {
 			log.debug("No lower level found, no need to count child members.");
 			return ObjectUtil.convertMembers(membersUpper, properties, childMemberCount);
+		}
+		
+		// Prepare map to quickly access counters using member.
+		//
+		Map<Member, Integer> map = new HashMap<Member, Integer>();
+		int i = 0;
+		for(Member member : membersUpper) {
+			map.put(member, new Integer(i++));
 		}
 		
 		// Try to extract the members of the lower level.
@@ -359,12 +369,11 @@ public class OlapMetaExplorer {
 		//
 		for(Member member : membersLower) {
 			
-			// Find the parent member.
+			// Find the parent member and increase corresponding counter, if present.
 			//
-			if(membersUpper.contains(member.getParentMember())) {
-				
-				int idx = membersUpper.indexOf(member.getParentMember());
-				childMemberCount[idx]++;
+			Integer index = map.get(member.getParentMember());
+			if(index != null) {
+				childMemberCount[index.intValue()]++;
 			}
 		}
 		

@@ -185,6 +185,7 @@ public class ObjectUtil {
 			
 			Integer count = childMemberCount != null ? childMemberCount[i] : null;
 			memberList.add(convert(l, properties, count));
+			++i;
 		}
 		return memberList;
 	}
