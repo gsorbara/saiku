@@ -103,6 +103,8 @@
 
 	</bean>
  
-
+	<bean id="sanityCheckResource" class="org.saiku.web.rest.resources.SanityCheckResource">
+		<property name="olapDiscoverService" ref="olapDiscoverServiceBean" />
+	</bean>
 
 </beans>
