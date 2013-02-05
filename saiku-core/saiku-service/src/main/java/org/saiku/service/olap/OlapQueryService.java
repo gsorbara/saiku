@@ -25,12 +25,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import mondrian.rolap.RolapConnection;
 import java.util.Set;
-import java.util.HashSet;
+
+import mondrian.rolap.RolapConnection;
 
 import org.apache.commons.lang.StringUtils;
 import org.olap4j.AllocationPolicy;
@@ -40,8 +41,8 @@ import org.olap4j.CellSetAxis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
-import org.olap4j.Scenario;
 import org.olap4j.Position;
+import org.olap4j.Scenario;
 import org.olap4j.impl.IdentifierParser;
 import org.olap4j.mdx.IdentifierNode;
 import org.olap4j.mdx.IdentifierSegment;
@@ -62,30 +63,25 @@ import org.saiku.olap.dto.SaikuDimensionSelection;
 import org.saiku.olap.dto.SaikuMember;
 import org.saiku.olap.dto.SaikuQuery;
 import org.saiku.olap.dto.SaikuSelection;
-
-import org.saiku.olap.dto.SaikuSelection;
 import org.saiku.olap.dto.SaikuTag;
 import org.saiku.olap.dto.SaikuTuple;
 import org.saiku.olap.dto.SaikuTupleDimension;
 import org.saiku.olap.dto.resultset.CellDataSet;
 import org.saiku.olap.query.IQuery;
 import org.saiku.olap.query.IQuery.QueryType;
-import org.saiku.olap.util.SaikuUniqueNameComparator;
-
 import org.saiku.olap.query.MdxQuery;
 import org.saiku.olap.query.OlapQuery;
 import org.saiku.olap.query.QueryDeserializer;
 import org.saiku.olap.util.ObjectUtil;
 import org.saiku.olap.util.OlapResultSetUtil;
+import org.saiku.olap.util.SaikuUniqueNameComparator;
 import org.saiku.olap.util.exception.SaikuOlapException;
 import org.saiku.olap.util.formatter.CellSetFormatter;
 import org.saiku.olap.util.formatter.FlattenedCellSetFormatter;
 import org.saiku.olap.util.formatter.FlattenedFaoCellSetFormatter;
-
 import org.saiku.olap.util.formatter.HierarchicalCellSetFormatter;
 import org.saiku.olap.util.formatter.ICellSetFormatter;
 import org.saiku.service.util.KeyValue;
-import org.saiku.service.util.OlapUtil;
 import org.saiku.service.util.exception.SaikuServiceException;
 import org.saiku.service.util.export.CsvExporter;
 import org.saiku.service.util.export.ExcelExporter;
@@ -344,7 +340,7 @@ public class OlapQueryService implements Serializable {
 							}
 						}
 						
-						members = ObjectUtil.convertMembers(mset);
+						members = ObjectUtil.convertMembers(mset, null, null);
 						Collections.sort(members, new SaikuUniqueNameComparator());
 						
 						break;
@@ -355,7 +351,7 @@ public class OlapQueryService implements Serializable {
 			log.debug("Found members in the result: " + members.size());
 			
 		} else {
-			members = olapDiscoverService.getLevelMembers(query.getSaikuCube(), dimensionName, hierarchyName, levelName);
+			members = olapDiscoverService.getLevelMembers(query.getSaikuCube(), dimensionName, hierarchyName, levelName, null, false);
 		}
 		
 		return members;
@@ -933,7 +929,7 @@ public class OlapQueryService implements Serializable {
 				for (int i = 0; i < cellPosition.size(); i++) {
 					members.addAll(cs.getAxes().get(i).getPositions().get(cellPosition.get(i)).getMembers());
 				}
-				List <SaikuMember> sm = ObjectUtil.convertMembers(members);
+				List <SaikuMember> sm = ObjectUtil.convertMembers(members, null, null);
 				SaikuTuple tuple = new SaikuTuple(sm);
 				tuples.add(tuple);
 				

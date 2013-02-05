@@ -50,6 +50,26 @@ import org.saiku.service.util.exception.SaikuServiceException;
 
 public class ObjectUtil {
 
+	private static List<String> standardPropKeys;
+	
+	static {
+		standardPropKeys = new ArrayList<String>();
+		StandardMemberProperty sProps[]  = Property.StandardMemberProperty.values();
+		for(StandardMemberProperty s : sProps) {
+			standardPropKeys.add(s.getName());
+		}
+		
+		// Add extra standard properties not listed by the olap4j API.
+		//
+		standardPropKeys.add("$name");
+		standardPropKeys.add("$scenario");
+		standardPropKeys.add("CELL_FORMATTER");
+		standardPropKeys.add("CELL_FORMATTER_SCRIPT");
+		standardPropKeys.add("CELL_FORMATTER_SCRIPT_LANGUAGE");
+		standardPropKeys.add("DISPLAY_FOLDER");
+		standardPropKeys.add("FORMAT_EXP");
+		standardPropKeys.add("KEY");
+	}
 
 	public static SaikuDimension convert(Dimension dim) {
 		//SaikuDimension sDim = new SaikuDimension(dim.getName(), dim.getUniqueName(), dim.getCaption(), dim.getDescription(), convertHierarchies(dim.getHierarchies()));
@@ -111,7 +131,7 @@ public class ObjectUtil {
 					defaultMember,
 					hierarchy.isVisible(),
 					convertLevels(hierarchy.getLevels()), 
-					convertMembers(hierarchy.getRootMembers()));
+					convertMembers(hierarchy.getRootMembers(), null, null));
 			
 		} catch (OlapException e) {
 			throw new SaikuServiceException("Cannot get root members",e);
@@ -156,20 +176,15 @@ public class ObjectUtil {
 		}
 	}
 
-	public static List<SaikuMember> convertMembers(Collection<Member> members) {
+	public static List<SaikuMember> convertMembers(Collection<Member> members, String properties, Integer[] childMemberCount) {
+		
 		List<SaikuMember> memberList= new ArrayList<SaikuMember>();
-		for (Member l : members) {
-			memberList.add(convert(l));
-		}
-		return memberList;
 
-	}
-	
-
-	public static List<PropertySaikuMember> convertMembers(List<Member> members, String properties) {
-		List<PropertySaikuMember> memberList= new ArrayList<PropertySaikuMember>();
+		int i = 0;
 		for (Member l : members) {
-			memberList.add(convert(l, properties));
+			
+			Integer count = childMemberCount != null ? childMemberCount[i] : null;
+			memberList.add(convert(l, properties, count));
 		}
 		return memberList;
 	}
@@ -207,20 +222,19 @@ public class ObjectUtil {
 
 	}
 
-	public static SaikuMember convert(Member m) {
-		//KB: Add MEMBER_KEY property:
-		//KB Add ChildMemberCount:
+	
+	public static SaikuMember convert(Member m, String properties, Integer childMemberCount) {
+		
 		String memberKey = "";
-		int childMemberCount = 0;
 		try {
 			Object memberKeyObj = m.getPropertyValue(Property.StandardMemberProperty.MEMBER_KEY);
-			memberKey = (memberKeyObj != null ? memberKeyObj.toString() : null);			
-			childMemberCount = m.getChildMemberCount();
+			memberKey = (memberKeyObj != null ? memberKeyObj.toString() : null);
 		} catch (Exception e) {
 		//ignore
 		}
 		
-		if (m instanceof Measure)
+		if (m instanceof Measure) {
+			
 			return new SaikuMember(
 					m.getName(), 
 					m.getUniqueName(), 
@@ -232,85 +246,97 @@ public class ObjectUtil {
 					m.isVisible(),
 					memberKey,
 					childMemberCount);
-		else
-			return new SaikuMember(
-					m.getName(), 
-					m.getUniqueName(), 
-					m.getCaption(), 
-					m.getDescription(),
-					m.getDimension().getUniqueName(),
-					m.getHierarchy().getUniqueName(),
-					m.getLevel().getUniqueName(),
-					memberKey,
-					childMemberCount);			
+		} else {
+
+			if(properties != null) {
+
+				List<SaikuProperty> prop = extractProperties(m, properties);
+				return new PropertySaikuMember(
+						m.getName(), 
+						m.getUniqueName(), 
+						m.getCaption(), 
+						m.getDescription(),
+						m.getDimension().getUniqueName(),
+						m.getHierarchy().getUniqueName(),
+						m.getLevel().getUniqueName(),
+						memberKey,
+						childMemberCount,
+						prop);
+				
+			} else {
+
+				return new SaikuMember(
+						m.getName(), 
+						m.getUniqueName(), 
+						m.getCaption(), 
+						m.getDescription(),
+						m.getDimension().getUniqueName(),
+						m.getHierarchy().getUniqueName(),
+						m.getLevel().getUniqueName(),
+						memberKey,
+						childMemberCount);
+			}
 		}
+	}
+	
+	
+	private static List<SaikuProperty> extractProperties(Member m, String properties) {
 		
-		public static PropertySaikuMember convert(Member m, String properties) {		
-			
-			List<SaikuProperty> prop = new ArrayList<SaikuProperty>();	
-			String memberKey = "";
-			int childMemberCount = 0;
-			try {
-				Object memberKeyObj = m.getPropertyValue(Property.StandardMemberProperty.MEMBER_KEY);
-				memberKey = (memberKeyObj != null ? memberKeyObj.toString() : null);			
-				childMemberCount = m.getChildMemberCount();
-				
-				List<String> sPropKeys = new ArrayList<String>();
-				sPropKeys.add("$name");
-				StandardMemberProperty sProps[]  = Property.StandardMemberProperty.values();
-				for(StandardMemberProperty s : sProps)
-					sPropKeys.add(s.getName());
-				
-				NamedList<Property> ps = m.getProperties();								
-				if(ps != null){
-					if(!"all".equalsIgnoreCase(properties)){
-						String propertiesSelectList[] = properties.split(",");
-						HashSet<String> propHash = new HashSet<String>();
-						propHash.addAll(Arrays.asList(propertiesSelectList));
-						ArrayList<String> propKeys = new ArrayList<String>();
-						propKeys.addAll(propHash);
+		List<SaikuProperty> prop = new ArrayList<SaikuProperty>();	
+		try {
+
+			// Iterate through member properties.
+			//
+			NamedList<Property> memberProperties = m.getProperties();								
+			if(memberProperties != null) {
+
+				if(!"all".equalsIgnoreCase(properties)) {
+
+					String propertiesSelectList[] = properties.split(",");
+					HashSet<String> propHash = new HashSet<String>();
+					propHash.addAll(Arrays.asList(propertiesSelectList));
+					ArrayList<String> propKeys = new ArrayList<String>();
+					propKeys.addAll(propHash);
+					
+					for(String propertiesSelect : propHash) {
+
+						Property p = memberProperties.get(propertiesSelect);
 						
-						for(String propertiesSelect : propHash){
-							Property p = ps.get(propertiesSelect);	
-							if(p != null){
-								if(!sPropKeys.contains(p.getName())){
-									if(p.getUniqueName().equals(propertiesSelect) || p.getName().equals(propertiesSelect) ){
-										prop.add(new SaikuProperty(
-														p.getName() , 
-														p.getCaption(), 
-														m.getPropertyFormattedValue(p)));
-									}
+						if(p != null) {
+							if(!standardPropKeys.contains(p.getName())) {
+								if(p.getUniqueName().equals(propertiesSelect) || p.getName().equals(propertiesSelect)) {
+
+									prop.add(new SaikuProperty(
+													p.getName() , 
+													p.getCaption(), 
+													m.getPropertyFormattedValue(p)));
 								}
-							}		
-						}								
-					}else{					
-						for(Property p : ps){
-							if(!sPropKeys.contains(p.getName()))
-								prop.add(new SaikuProperty(
-												p.getName() , 
-												p.getCaption(), 
-												m.getPropertyValue(p)+"" ));
+							}
+						}		
+					}
+					
+				} else {
+
+					for(Property p : memberProperties) {
+
+						if(!standardPropKeys.contains(p.getName())) {
+							
+							prop.add(new SaikuProperty(
+											p.getName() , 
+											p.getCaption(), 
+											m.getPropertyFormattedValue(p)));
 						}
 					}
-				}					
-				
-			} catch (Exception e) {
-			//ignore
-			}
+				}
+			}					
 			
-			return new PropertySaikuMember(
-					m.getName(), 
-					m.getUniqueName(), 
-					m.getCaption(), 
-					m.getDescription(),
-					m.getDimension().getUniqueName(),
-					m.getHierarchy().getUniqueName(),
-					m.getLevel().getUniqueName(),
-					memberKey,
-					childMemberCount,
-					prop);
+		} catch (Exception e) {
 			
-	}		
+			e.printStackTrace();
+		}
+
+		return prop;
+	}
 	
 	public static SaikuDimensionSelection convertDimensionSelection(QueryDimension dim) {
 		List<SaikuSelection> selections = ObjectUtil.convertSelections(dim.getInclusions());

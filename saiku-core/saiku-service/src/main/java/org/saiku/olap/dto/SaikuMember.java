@@ -15,7 +15,6 @@
  */
 package org.saiku.olap.dto;
 
-import java.util.List;
 
 public class SaikuMember extends AbstractSaikuObject {
 	
@@ -31,11 +30,11 @@ public class SaikuMember extends AbstractSaikuObject {
 	//Add memberKey:
 	private String memberKey;
 	//KB Add ChildMemberCount:
-	private int childMemberCount;
+	private Integer childMemberCount;
 	
 	public SaikuMember() {}
 
-	public SaikuMember(String name, String uniqueName, String caption, String description, String dimensionUniqueName, String hierarchyUniqueName, String levelUniqueName,String memberKey, int childMemberCount) {
+	public SaikuMember(String name, String uniqueName, String caption, String description, String dimensionUniqueName, String hierarchyUniqueName, String levelUniqueName,String memberKey, Integer childMemberCount) {
 		super(uniqueName,name);
 		this.caption = caption;
 		this.description = description;
@@ -47,7 +46,7 @@ public class SaikuMember extends AbstractSaikuObject {
 		this.childMemberCount = childMemberCount;
 	}
 
-	public SaikuMember(String name, String uniqueName, String caption, String description, String dimensionUniqueName, String hierarchyUniqueName, String levelUniqueName, boolean visible, String memberKey, int childMemberCount) {
+	public SaikuMember(String name, String uniqueName, String caption, String description, String dimensionUniqueName, String hierarchyUniqueName, String levelUniqueName, boolean visible, String memberKey, Integer childMemberCount) {
 		super(uniqueName,name);
 		this.caption = caption;
 		this.description = description;
@@ -59,7 +58,7 @@ public class SaikuMember extends AbstractSaikuObject {
 		this.childMemberCount = childMemberCount;
 	}
 
-	public SaikuMember(String name, String uniqueName, String caption, String dimensionUniqueName, String levelUniqueName, String memberKey, int childMemberCount) {
+	public SaikuMember(String name, String uniqueName, String caption, String dimensionUniqueName, String levelUniqueName, String memberKey, Integer childMemberCount) {
 		super(uniqueName,name);
 		this.caption = caption;
 		this.dimensionUniqueName = dimensionUniqueName;
@@ -91,16 +90,16 @@ public class SaikuMember extends AbstractSaikuObject {
 	public String getHierarchyUniqueName() {
 		return hierarchyUniqueName;
 	}
-	//Getter method for memberKey
+
 	public String getMemberKey() {
 		return memberKey;
 	}
-	//Setter method for memberKey
+
 	public void setMemberKey(String memberKey) {
 		this.memberKey = memberKey;
 	}
-	//Getter method for childMemberCount
-	public int getChildMemberCount() {
+
+	public Integer getChildMemberCount() {
 		return childMemberCount;
 	}	
 }

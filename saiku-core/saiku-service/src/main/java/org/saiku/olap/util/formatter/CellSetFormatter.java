@@ -38,10 +38,6 @@ import org.saiku.olap.dto.resultset.DataCell;
 import org.saiku.olap.dto.resultset.Matrix;
 import org.saiku.olap.dto.resultset.MemberCell;
 
-
-import java.text.DecimalFormat;
-import java.util.*;
-
 public class CellSetFormatter implements ICellSetFormatter {
 	/**
 	 * Description of an axis.

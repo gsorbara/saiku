@@ -16,7 +16,6 @@
 package org.saiku.service.util.export;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +26,8 @@ import org.saiku.olap.dto.resultset.DataCell;
 import org.saiku.olap.util.OlapResultSetUtil;
 import org.saiku.olap.util.formatter.CellSetFormatter;
 import org.saiku.olap.util.formatter.ICellSetFormatter;
-import org.saiku.service.util.exception.SaikuServiceException;
 import org.saiku.service.util.KeyValue;
+import org.saiku.service.util.exception.SaikuServiceException;
 
 public class CsvExporter {
 	

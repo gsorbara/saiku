@@ -17,7 +17,6 @@ package org.saiku.olap.query;
 
 import java.util.Map;
 import java.util.Properties;
-import java.util.List;
 
 import org.olap4j.Axis;
 import org.olap4j.CellSet;

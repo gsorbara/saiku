@@ -18,6 +18,7 @@ package org.saiku.olap.discover;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,8 +37,6 @@ import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
 import org.saiku.datasources.connection.IConnectionManager;
-
-import org.saiku.olap.dto.PropertySaikuMember;
 import org.saiku.olap.dto.SaikuCatalog;
 import org.saiku.olap.dto.SaikuConnection;
 import org.saiku.olap.dto.SaikuCube;
@@ -46,15 +45,18 @@ import org.saiku.olap.dto.SaikuHierarchy;
 import org.saiku.olap.dto.SaikuLevel;
 import org.saiku.olap.dto.SaikuMember;
 import org.saiku.olap.dto.SaikuSchema;
+import org.saiku.olap.util.MemberUtil;
 import org.saiku.olap.util.ObjectUtil;
-
 import org.saiku.olap.util.SaikuCubeCaptionComparator;
 import org.saiku.olap.util.SaikuDimensionCaptionComparator;
 import org.saiku.olap.util.SaikuMemberCaptionComparator;
 import org.saiku.olap.util.exception.SaikuOlapException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OlapMetaExplorer {
-
+    
+    private static final Logger log = LoggerFactory.getLogger(OlapMetaExplorer.class);
 
 	private IConnectionManager connections;
 
@@ -265,7 +267,7 @@ public class OlapMetaExplorer {
 		}
 		if (h!= null) {
 			try {
-				members = (ObjectUtil.convertMembers(h.getRootMembers()));
+				members = (ObjectUtil.convertMembers(h.getRootMembers(), null, null));
 			} catch (OlapException e) {
 				throw new SaikuOlapException("Cannot retrieve root members of hierarchy: " + hierarchyName,e);
 			}
@@ -297,8 +299,85 @@ public class OlapMetaExplorer {
 
 	}
 
-	public List<SaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level) throws SaikuOlapException {
+
+	public List<SaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level, String properties, boolean children) throws SaikuOlapException {
+		
+		if(children) {
+			
+			return getAllMembersWithChildrenCount(cube, dimension, hierarchy, level, properties);
+			
+		} else {
+			
+			return getAllMembers(cube, dimension, hierarchy, level, properties);
+			
+		}
+	}
+
+	
+	private List<SaikuMember> getAllMembersWithChildrenCount(SaikuCube cube, String dimension, String hierarchy, String level, String properties) 
+		throws SaikuOlapException {
+
+		log.debug("Entering getLevelMembersWithChildrenCount method.");
+		
+		Cube nativeCube = getNativeCube(cube);
+		Level upper = MemberUtil.findNativeLevel(nativeCube, dimension, hierarchy, level);
+		if(upper == null) {
+			log.debug(String.format("No level found for dimension %s, hierarchy %s, level %s", dimension, hierarchy, level));
+			return new ArrayList<SaikuMember>();
+		}
+		
+		List<Member> membersUpper = null;
 		try {
+			membersUpper = upper.getMembers();
+		} catch (OlapException e) {
+			String msg = "Exception caught while getting all members";
+			log.error(msg, e);
+			throw new SaikuOlapException(msg, e);
+		}
+		
+		Integer[] childMemberCount = new Integer[membersUpper.size()];
+		Arrays.fill(childMemberCount, new Integer(0));
+		
+		Level lower = MemberUtil.findNativeLowerLevel(upper);
+		if(lower == null) {
+			log.debug("No lower level found, no need to count child members.");
+			return ObjectUtil.convertMembers(membersUpper, properties, childMemberCount);
+		}
+		
+		// Try to extract the members of the lower level.
+		//
+		List<Member> membersLower = null;
+		try {
+			membersLower = lower.getMembers();
+		} catch (OlapException e) {
+			String msg = "Exception caught while getting members of lower level.";
+			log.error(msg, e);
+			throw new SaikuOlapException(msg, e);
+		}
+		
+		// Iterate on lower level's members and update children counters.
+		//
+		for(Member member : membersLower) {
+			
+			// Find the parent member.
+			//
+			if(membersUpper.contains(member.getParentMember())) {
+				
+				int idx = membersUpper.indexOf(member.getParentMember());
+				childMemberCount[idx]++;
+			}
+		}
+		
+		log.debug("Returning members with populated children count.");
+		return ObjectUtil.convertMembers(membersUpper, properties, childMemberCount);
+	}
+	
+	
+	private List<SaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level, String properties) 
+			throws SaikuOlapException {
+		
+		try {
+			
 			Cube nativeCube = getNativeCube(cube);
 			Dimension dim = nativeCube.getDimensions().get(dimension);
 			if (dim != null) {
@@ -316,11 +395,11 @@ public class OlapMetaExplorer {
 					if (l == null) {
 						for (Level lvl : h.getLevels()) {
 							if (lvl.getUniqueName().equals(level) || lvl.getName().equals(level)) {
-								return (ObjectUtil.convertMembers(lvl.getMembers()));
+								return (ObjectUtil.convertMembers(lvl.getMembers(), properties, null));
 							}
 						}
 					} else {
-						return (ObjectUtil.convertMembers(l.getMembers()));
+						return (ObjectUtil.convertMembers(l.getMembers(), properties, null));
 					}
 
 				}
@@ -330,43 +409,6 @@ public class OlapMetaExplorer {
 		}
 
 		return new ArrayList<SaikuMember>();
-
-	}
-	
-	public List<PropertySaikuMember> getAllMembers(SaikuCube cube, String dimension, String hierarchy, String level, String properties) throws SaikuOlapException {
-		try {
-			Cube nativeCube = getNativeCube(cube);
-			Dimension dim = nativeCube.getDimensions().get(dimension);
-			if (dim != null) {
-				Hierarchy h = dim.getHierarchies().get(hierarchy);
-				if (h == null) {
-					for (Hierarchy hlist : dim.getHierarchies()) {
-						if (hlist.getUniqueName().equals(hierarchy) || hlist.getName().equals(hierarchy)) {
-							h = hlist;
-						}
-					}
-				}
-
-				if (h!= null) {
-					Level l = h.getLevels().get(level);
-					if (l == null) {
-						for (Level lvl : h.getLevels()) {
-							if (lvl.getUniqueName().equals(level) || lvl.getName().equals(level)) {
-								return (ObjectUtil.convertMembers(lvl.getMembers(), properties));
-							}
-						}
-					} else {
-						return (ObjectUtil.convertMembers(l.getMembers(), properties));
-					}
-
-				}
-			}
-		} catch (OlapException e) {
-			throw new SaikuOlapException("Cannot get all members",e);
-		}
-
-		return new ArrayList<PropertySaikuMember>();
-
 	}
 
 
@@ -378,7 +420,7 @@ public class OlapMetaExplorer {
 			Member m = nativeCube.lookupMember(memberList);
 			if (m != null) {
 				for (Member c :  m.getChildMembers()) {
-					SaikuMember sm = ObjectUtil.convert(c);
+					SaikuMember sm = ObjectUtil.convert(c, null, null);
 					members.add(sm);
 				}
 			}
@@ -400,11 +442,11 @@ public class OlapMetaExplorer {
 					measures.add(ObjectUtil.convert(measure));
 				}
 				*/
-				measures.add(ObjectUtil.convert(measure));
+				measures.add(ObjectUtil.convert(measure, null, null));
 			}
 			if (measures.size() == 0) {
 				Hierarchy hierarchy = nativeCube.getDimensions().get("Measures").getDefaultHierarchy();
-				measures = (ObjectUtil.convertMembers(hierarchy.getRootMembers()));
+				measures = (ObjectUtil.convertMembers(hierarchy.getRootMembers(), null, null));
 			}
 		} catch (OlapException e) {
 			throw new SaikuOlapException("Cannot get measures for cube:"+cube.getName(),e);
@@ -419,7 +461,7 @@ public class OlapMetaExplorer {
 			Cube nativeCube = getNativeCube(cube);
 			Member m = nativeCube.lookupMember(IdentifierNode.parseIdentifier(uniqueMemberName).getSegmentList());
 			if (m != null) {
-				return ObjectUtil.convert(m);
+				return ObjectUtil.convert(m, null, null);
 			}
 			return null;
 		} catch (Exception e) {

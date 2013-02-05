@@ -16,7 +16,6 @@
 package org.saiku.olap.query;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.CharsetEncoder;
 import java.sql.SQLException;
 
 import org.apache.commons.lang.StringUtils;

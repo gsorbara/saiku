@@ -217,7 +217,7 @@ public class OlapDiscoverResource implements Serializable {
 	@GET
 	@Produces({"application/json" })
 	@Path("/{connection}/{catalog}/{schema}/{cube}/dimensions/{dimension}/hierarchies/{hierarchy}/levels/{level}")
-	public List<?> getLevelMembers(
+	public List<SaikuMember> getLevelMembers(
 			@PathParam("connection") String connectionName, 
 			@PathParam("catalog") String catalogName, 
 			@PathParam("schema") String schemaName, 
@@ -225,29 +225,35 @@ public class OlapDiscoverResource implements Serializable {
 			@PathParam("dimension") String dimensionName, 
 			@PathParam("hierarchy") String hierarchyName,
 			@PathParam("level") String levelName,
-			@QueryParam("properties") String properties)
-	{
+			@QueryParam("properties") String properties,
+			@QueryParam("childrenCount") String childrenCount) {
+		
+		
+		if(properties != null && "".equals(properties)) {
+			throw new RuntimeException("properties argument if passed cannot be empty.");
+		} 
+		
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
 
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
+		boolean children = childrenCount != null && childrenCount.trim().equalsIgnoreCase("true");
+		
+		SaikuCube cube = new SaikuCube(connectionName, cubeName, cubeName, cubeName, catalogName, schemaName);
+		
 		try {
-			if(properties == null){
-				return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName);
-			}else{
-				if("".equals(properties)){
-					throw new Exception("properties Argument is needed");
-				}else{					
-					return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName, properties);
-				}				
-			}
+
+			return olapDiscoverService.getLevelMembers(cube, dimensionName, hierarchyName, levelName, properties, children);
+			
 		} catch (Exception e) {
-			log.error(this.getClass().getName(),e);
+			
+			log.error(this.getClass().getName(), e);
 		}
+		
 		return new ArrayList<SaikuMember>();
 	}
-   
+
+	
 	/**
 	 * Get root member of that hierarchy.
 	 * @return 
@@ -260,8 +266,8 @@ public class OlapDiscoverResource implements Serializable {
 			@PathParam("catalog") String catalogName, 
 			@PathParam("schema") String schemaName, 
 			@PathParam("cube") String cubeName, 
-			@PathParam("hierarchy") String hierarchyName)
-		{
+			@PathParam("hierarchy") String hierarchyName) {
+		
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}

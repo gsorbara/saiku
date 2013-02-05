@@ -18,7 +18,6 @@ package org.saiku.olap.util;
 
 import java.util.Comparator;
 
-import org.saiku.olap.dto.SaikuCube;
 import org.saiku.olap.dto.SaikuDimension;
 
 
