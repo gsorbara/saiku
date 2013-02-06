@@ -420,7 +420,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     	for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
     			
-    			List<SaikuMember> members = olapMetaExplorer.getMemberChildren(saikuCube, OlapTestParams.uniqueMemberName);
+    			List<SaikuMember> members = olapMetaExplorer.getMemberChildren(saikuCube, OlapTestParams.uniqueMemberName, null, false);
     	    	
     	    	assertNotNull(members);
     	    	
@@ -458,7 +458,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     	for (SaikuCube saikuCube : cubes) {
     		if(OlapTestParams.cubeName.equals(saikuCube.getName())){
     			
-    			SaikuMember member = olapMetaExplorer.getMember(saikuCube, OlapTestParams.uniqueMemberName);
+    			SaikuMember member = olapMetaExplorer.getMember(saikuCube, OlapTestParams.uniqueMemberName, null, false);
     	    	
     	    	assertNotNull(member);
     	    	assertEquals(OlapTestParams.uniqueMemberName, member.getUniqueName());

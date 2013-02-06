@@ -421,15 +421,23 @@ public class OlapMetaExplorer {
 	}
 
 
-	public List<SaikuMember> getMemberChildren(SaikuCube cube, String uniqueMemberName) throws SaikuOlapException {
+	public List<SaikuMember> getMemberChildren(SaikuCube cube, String uniqueMemberName, String properties, boolean children) throws SaikuOlapException {
+		
 		List<SaikuMember> members = new ArrayList<SaikuMember>();
+		
 		try {
+			
 			Cube nativeCube = getNativeCube(cube);
+			
 			List<IdentifierSegment> memberList = IdentifierNode.parseIdentifier(uniqueMemberName).getSegmentList();
 			Member m = nativeCube.lookupMember(memberList);
+			
 			if (m != null) {
+				
 				for (Member c :  m.getChildMembers()) {
-					SaikuMember sm = ObjectUtil.convert(c, null, null);
+					
+					Integer childMemberCount = children ? c.getChildMemberCount() : null;
+					SaikuMember sm = ObjectUtil.convert(c, properties, childMemberCount);
 					members.add(sm);
 				}
 			}
@@ -465,14 +473,20 @@ public class OlapMetaExplorer {
 		return measures;
 	}
 
-	public SaikuMember getMember(SaikuCube cube, String uniqueMemberName) throws SaikuOlapException {
+	public SaikuMember getMember(SaikuCube cube, String uniqueMemberName, String properties, boolean children) throws SaikuOlapException {
+		
 		try {
+			
 			Cube nativeCube = getNativeCube(cube);
 			Member m = nativeCube.lookupMember(IdentifierNode.parseIdentifier(uniqueMemberName).getSegmentList());
 			if (m != null) {
-				return ObjectUtil.convert(m, null, null);
+				
+				Integer childMemberCount = children ? m.getChildMemberCount() : null;
+				return ObjectUtil.convert(m, properties, childMemberCount);
 			}
+			
 			return null;
+			
 		} catch (Exception e) {
 			throw new SaikuOlapException("Cannot find member: " + uniqueMemberName + " in cube:"+cube.getName(),e);
 		}

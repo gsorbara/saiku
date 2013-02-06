@@ -333,16 +333,30 @@ public class OlapDiscoverResource implements Serializable {
 			@PathParam("catalog") String catalogName, 
 			@PathParam("schema") String schemaName, 
 			@PathParam("cube") String cubeName, 
-			@PathParam("member") String memberName)
+			@PathParam("member") String memberName,
+			@QueryParam("properties") String properties,
+			@QueryParam("childrenCount") String childrenCount)
 	{
+		if(properties != null && "".equals(properties)) {
+			throw new RuntimeException("properties argument if passed cannot be empty.");
+		} 
+
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
+
+		boolean children = childrenCount != null && childrenCount.trim().equalsIgnoreCase("true");
+
+		SaikuCube cube = new SaikuCube(connectionName, cubeName, cubeName, cubeName, catalogName, schemaName);
+		
 		try {
-			return olapDiscoverService.getMember(cube, memberName);
+			
+			return olapDiscoverService.getMember(cube, memberName, properties, children);
+			
 		} catch (Exception e) {
+			
 			log.error(this.getClass().getName(),e);
+			
 		}
 
 		return null;
@@ -361,17 +375,32 @@ public class OlapDiscoverResource implements Serializable {
 			@PathParam("catalog") String catalogName, 
 			@PathParam("schema") String schemaName, 
 			@PathParam("cube") String cubeName, 
-			@PathParam("member") String memberName)
+			@PathParam("member") String memberName,
+			@QueryParam("properties") String properties,
+			@QueryParam("childrenCount") String childrenCount)
 	{
+		if(properties != null && "".equals(properties)) {
+			throw new RuntimeException("properties argument if passed cannot be empty.");
+		} 
+
 		if ("null".equals(schemaName)) {
 			schemaName = "";
 		}
-		SaikuCube cube = new SaikuCube(connectionName, cubeName,cubeName,cubeName, catalogName, schemaName);
+
+		boolean children = childrenCount != null && childrenCount.trim().equalsIgnoreCase("true");
+
+		SaikuCube cube = new SaikuCube(connectionName, cubeName, cubeName, cubeName, catalogName, schemaName);
+		
 		try {
-			return olapDiscoverService.getMemberChildren(cube, memberName);
+			
+			return olapDiscoverService.getMemberChildren(cube, memberName, properties, children);
+			
 		} catch (Exception e) {
+			
 			log.error(this.getClass().getName(),e);
+			
 		}
+		
 		return new ArrayList<SaikuMember>();
 	}
 

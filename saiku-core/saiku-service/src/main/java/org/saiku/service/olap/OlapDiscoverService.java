@@ -176,17 +176,17 @@ public class OlapDiscoverService implements Serializable {
 		}	
 	}
 	
-	public List<SaikuMember> getMemberChildren(SaikuCube cube, String uniqueMemberName) {
+	public List<SaikuMember> getMemberChildren(SaikuCube cube, String uniqueMemberName, String properties, boolean children) {
 		try {
-			return metaExplorer.getMemberChildren(cube, uniqueMemberName);
+			return metaExplorer.getMemberChildren(cube, uniqueMemberName, properties, children);
 		} catch (SaikuOlapException e) {
 			throw new SaikuServiceException(e);
 		}	
 	}
 
-	public SaikuMember getMember(SaikuCube cube, String uniqueMemberName) {
+	public SaikuMember getMember(SaikuCube cube, String uniqueMemberName, String properties, boolean children) {
 		try {
-			return metaExplorer.getMember(cube, uniqueMemberName);
+			return metaExplorer.getMember(cube, uniqueMemberName, properties, children);
 		} catch (SaikuOlapException e) {
 			throw new SaikuServiceException(e);
 		}
