@@ -164,12 +164,135 @@ public class SDWDatasourceManager implements IDatasourceManager{
 		}
 	}
 	
+	private void createDatasourceByName(String createDataDourceName){
+		log.debug("create datasource with name "+createDataDourceName);
+		
+		try{
+			boolean created = false;
+			Workspaces ws = sdwMetadataClient.retrieveWorkspaces();
+			
+			List<Workspace> workspaces = ws.getWorkspace();
+			for (Workspace workspace : workspaces) {
+				if(created)
+					break;
+				
+				log.debug(workspace.getName());
+				
+				if(workspace.isVisible()){
+					String workspaceName = workspace.getName();
+					
+					Catalogs catalogs = sdwMetadataClient.retrieveCatalogs(workspaceName);
+					List<Catalog> listCatalog = catalogs.getCatalog();
+							
+					if(!listCatalog.isEmpty()){
+						for (Catalog catalog : listCatalog) {
+							if(created)
+								break;
+							
+							if(!catalog.isVisible())
+								continue;							
+							
+							String catalogName = catalog.getName();
+							if(catalogName != null){
+								Schemas schemas = sdwMetadataClient.retrieveSchemas(workspaceName, catalogName);
+								List<Schema> listSchema = schemas.getSchema();
+								if(listSchema != null) {
+									for (Schema schema : listSchema) {
+										if(created)
+											break;
+										
+										if(!schema.isVisible())
+											continue;										
+										
+										String schemaName = schema.getName();
+										String connectionname = schema.getConnectionName();
+										if(schemaName != null && connectionname != null){
+											Connection connection = sdwMetadataClient.retrieveConnection(workspaceName,connectionname );											
+											SchemaLanguages schemaLanguages = sdwMetadataClient.retrieveSchemaLanguages(workspaceName, catalogName, schemaName);
+											if(schemaLanguages != null){
+												for(SchemaLanguage schemaLanguage : schemaLanguages.getSchemaLanguages()) {
+													if(created)
+														break;
+													
+													String mondrianSchemaXML = schemaLanguage.getXml();
+													
+													if(mondrianSchemaXML != null && connection != null){
+														
+														 log.debug("create datasource for workspaceName="+workspaceName + ", catalogName=" + catalogName + ", schemaName=" + schemaName + ", language=" + schemaLanguage.getLanguage());
+														
+														 // TODO: should be managed better than this!
+														 //
+														 String datasourceName = null;
+														 if(schema.getName().endsWith("- " + schemaLanguage.getLanguage()))
+															 datasourceName = schema.getName();
+														 else
+															 datasourceName = schema.getName() + " - " + schemaLanguage.getLanguage();
+														 
+														 if(!createDataDourceName.equals(datasourceName)){
+															 continue;
+														 }
+														 
+														 log.debug("create datasource for workspaceName="+workspaceName);
+															 
+														 //Add the database connection info.
+														 Properties props = new Properties();
+														 props.setProperty(ISaikuConnection.NAME_KEY, datasourceName);
+														 props.setProperty("type", ISaikuConnection.OLAP_DATASOURCE);
+														 props.setProperty(ISaikuConnection.USERNAME_KEY, connection.getUsername());
+														 props.setProperty(ISaikuConnection.PASSWORD_KEY, connection.getPassword());
+														 props.setProperty(ISaikuConnection.DRIVER_KEY, "mondrian.olap4j.MondrianOlap4jDriver");
+														 
+														 //Add the database URL		
+														 StringBuffer buffer = new StringBuffer();
+														 buffer.append("jdbc:mondrian:Jdbc=");
+														 buffer.append(connection.getUrl());
+														 
+														 //Add mondrian schema for each connection
+														 buffer.append(";CatalogContent=\"" + mondrianSchemaXML.replaceAll("\"", "\"\""));
+														 buffer.append("\";JdbcDrivers=");
+														 buffer.append(connection.getDriver());
+															
+														 props.setProperty(ISaikuConnection.URL_KEY, buffer.toString());
+					
+														 //SDW-206
+														 props.setProperty("workspaceName", workspaceName);
+														 props.setProperty("connectionname", connectionname);
+														 props.setProperty("catalogName", catalogName);
+														 props.setProperty("schemaName", schemaName);
+														 props.setProperty("schemaLanguage", schemaLanguage.getLanguage());
+														 
+														 
+														 //String datasourceName = workspaceName + " | " + catalogName + " | " + schemaName + " | " + connectionname;
+														 SaikuDatasource ds = new SaikuDatasource(datasourceName,SaikuDatasource.Type.OLAP,props);
+														 datasources.put(datasourceName, ds);	
+														 created = true;
+													}													
+												}
+											}								
+										}
+									}
+								}
+							}
+						}
+					}
+				}			
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+			throw new SaikuServiceException(e.getMessage(),e);
+		}
+	}
+	
 	public void loadByName(String name){
 
 		log.debug("load datasource by name");
 		
 		SaikuDatasource ds = datasources.get(name);
-		if(ds != null){			
+		if(ds == null){
+			createDatasourceByName(name);
+		}else{
+			
 			String workspaceName = ds.getProperties() == null ? "" : (String) ds.getProperties().get("workspaceName");
 			String connectionname = ds.getProperties() == null ? "" : (String) ds.getProperties().get("connectionname");
 			String catalogName = ds.getProperties() == null ? "" : (String) ds.getProperties().get("catalogName");

@@ -172,10 +172,12 @@ public class SDWDatasourceManagerTest {
 	@Test
 	 public void testReloadDatasource(){
 	  System.out.println("testing reload datasources");  
+	  ds.removeDatasource("hungermap - en");
+	  
 	  ds.loadByName("hungermap - en");  
 	  SaikuDatasource datasource = ds.getDatasource("hungermap - en");  
 	  Assert.assertNotNull(datasource);
-	  
+	  //System.out.println(ds.getDatasources());
 	 }
 	
 }
