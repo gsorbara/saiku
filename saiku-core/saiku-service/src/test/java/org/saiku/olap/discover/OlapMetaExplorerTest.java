@@ -414,7 +414,7 @@ public class OlapMetaExplorerTest extends ServiceTest{
     
     
     @Test
-    public final void testGetMemeberChildren() throws SaikuOlapException{
+    public final void testGetMemberChildren() throws SaikuOlapException{
 
     	List<SaikuCube> cubes = olapMetaExplorer.getAllCubes();
     	for (SaikuCube saikuCube : cubes) {
@@ -431,7 +431,8 @@ public class OlapMetaExplorerTest extends ServiceTest{
 		}  
     	
     }
-  
+
+    
     @Test
     public final void testGetAllMeasures() throws SaikuOlapException{
     	
