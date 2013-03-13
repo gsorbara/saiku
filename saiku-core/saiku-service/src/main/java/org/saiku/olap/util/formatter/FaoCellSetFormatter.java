@@ -1,21 +1,17 @@
-/*
- * Copyright (C) 2011 OSBI Ltd
+/*  
+ *   Copyright 2012 OSBI Ltd
  *
- * This program is free software; you can redistribute it and/or modify it 
- * under the terms of the GNU General Public License as published by the Free 
- * Software Foundation; either version 2 of the License, or (at your option) 
- * any later version.
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * 
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along 
- * with this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 package org.saiku.olap.util.formatter;
 
@@ -43,14 +39,13 @@ import org.olap4j.metadata.Member;
 import org.olap4j.metadata.NamedList;
 import org.olap4j.metadata.Property;
 import org.saiku.olap.dto.resultset.DataCell;
-import org.saiku.olap.dto.resultset.FaoMemberCell;
 import org.saiku.olap.dto.resultset.Matrix;
+import org.saiku.olap.dto.resultset.FaoMemberCell;
 
-
-public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
+public class FaoCellSetFormatter implements ICellSetFormatter {
 
 	private Pattern dimensionSubtypePattern = Pattern.compile(".*\\{(.+) Dimension\\}.*");
-	
+
 	/**
 	 * Description of an axis.
 	 */
@@ -107,18 +102,7 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 		public void addLevel(Integer depth, Level level) {
 			depthLevel.put(depth, level);
 		}
-	}
 
-	/**
-	 * @param formattedValue
-	 * @return values
-	 */
-	public static String getValueString(final String formattedValue) {
-		final String[] values = formattedValue.split("\\|"); //$NON-NLS-1$
-		if (values.length > 1) {
-			return values[1];
-		}
-		return values[0];
 	}
 
 	/**
@@ -164,12 +148,8 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 	}
 
 	private Matrix matrix;
-	
-	private List<Integer> ignorex = new ArrayList<Integer>();
-	private List<Integer> ignorey = new ArrayList<Integer>();
 
 	public Matrix format(final CellSet cellSet) {
-		
 		// Compute how many rows are required to display the columns axis.
 		final CellSetAxis columnsAxis;
 		if (cellSet.getAxes().size() > 0) {
@@ -283,6 +263,9 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 						memberInfo.setFormattedValue(s);
 						memberInfo.setProperty("__headertype", "row_header_header");
 						memberInfo.setProperty("levelindex", "" + levels.indexOf(xLevel));
+						memberInfo.setHierarchy(xLevel.getHierarchy().getUniqueName());
+						memberInfo.setParentDimension(xLevel.getDimension().getName());
+						memberInfo.setLevel(xLevel.getUniqueName());
 					}
 					matrix.set(x, y, memberInfo);
 				}
@@ -290,65 +273,36 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 			}
 		}
 		// Populate matrix with cells representing axes
+		// noinspection SuspiciousNameCombination
 		populateAxis(matrix, columnsAxis, columnsAxisInfo, true, xOffsset);
 		populateAxis(matrix, rowsAxis, rowsAxisInfo, false, yOffset);
 
-		int headerwidth = matrix.getMatrixWidth();
-
-			for(int yy=matrix.getMatrixHeight(); yy > matrix.getOffset() ; yy--) {
-				for(int xx=0; xx < headerwidth-1;xx++) {
-							if (matrix.get(xx,yy-1) != null && matrix.get(xx,yy) != null && matrix.get(xx,yy-1).getRawValue().equals(matrix.get(xx, yy).getRawValue())) {
-								matrix.set(xx, yy, new FaoMemberCell());
-							}
-							else {
-								break;
-							}
-					}
-			}
-
-
 		// Populate cell values
-		int newyOffset = yOffset;
-		int newxOffset = xOffsset;
-		List<Integer> donex = new ArrayList<Integer>();
-		List<Integer> doney = new ArrayList<Integer>();
 		for (final Cell cell : cellIter(pageCoords, cellSet)) {
 			final List<Integer> coordList = cell.getCoordinateList();
-			int y = newyOffset;
-			int x = newxOffset;
-			if (coordList.size() > 0) {
-				if (coordList.get(0) == 0) {
-					newxOffset = xOffsset;
-					donex = new ArrayList<Integer>();
-				}
-				x = newxOffset;
-				if (coordList.size() > 0)
-					x += coordList.get(0);
-				y = newyOffset;
-				if (coordList.size() > 1)
-					y += coordList.get(1);
-
-				boolean stop = false;
-				if (coordList.size() > 0 && ignorex.contains(coordList.get(0))) {
-					if (!donex.contains(coordList.get(0))) {
-						newxOffset--;
-						donex.add(coordList.get(0));
-					}
-					stop = true;
-				}
-				if (coordList.size() > 1 && ignorey.contains(coordList.get(1))) {
-					if (!doney.contains(coordList.get(1))) {
-						newyOffset--;
-						doney.add(coordList.get(1));
-					}
-					stop = true;
-				}
-				if (stop) {
-					continue;
-				}
-			}
+			int x = xOffsset;
+			if (coordList.size() > 0)
+				x += coordList.get(0);
+			int y = yOffset;
+			if (coordList.size() > 1)
+				y += coordList.get(1);
 			final DataCell cellInfo = new DataCell(true, false, coordList);
 			cellInfo.setCoordinates(cell.getCoordinateList());
+
+
+
+			//            NamedList<Property> proplist = null;
+			//            try {
+			//                proplist = cell.getCellSet().getMetaData().getCellProperties();
+			//                for(int i = 0; i<proplist.size(); i++){
+			//                	
+			//                    cellInfo.setProperty(proplist.get(i).getName(), cell.getPropertyValue(proplist.get(i)).toString());
+			//               }
+			//          
+			//            } catch (OlapException e1) {
+			//                // TODO Auto-generated catch block
+			//                e1.printStackTrace();
+			//            }
 
 
 			if (cell.getValue() != null) {
@@ -379,7 +333,28 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 				}
 				// the raw value
 			}
-			cellInfo.setFormattedValue(getValueString(cellValue));
+
+			// Format string is relevant for Excel export
+			// xmla cells can throw an error on this
+			try {
+
+				String formatString = (String) cell.getPropertyValue(Property.StandardCellProperty.FORMAT_STRING);
+				if (formatString != null && !formatString.startsWith("|")) {
+					cellInfo.setFormatString(formatString);
+				} else {
+					formatString = formatString.substring(1, formatString.length());
+					cellInfo.setFormatString(formatString.substring(0, formatString.indexOf("|")));
+				}
+			} catch (Exception e) {
+				// we tried
+			}
+
+            Map<String, String> cellProperties = new HashMap<String, String>();
+			String val = Olap4jUtil.parseFormattedCellValue(cellValue, cellProperties);
+			if (!cellProperties.isEmpty()) {
+				cellInfo.setProperties(cellProperties);
+			}
+			cellInfo.setFormattedValue(val);
 			matrix.set(x, y, cellInfo);
 		}
 		return matrix;
@@ -401,8 +376,8 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 	 *            Ordinal of first cell to populate in matrix
 	 */
 	private void populateAxis(final Matrix matrix, final CellSetAxis axis, final AxisInfo axisInfo,
-			final boolean isColumns, final int oldoffset) {
-		int offset = oldoffset;
+			final boolean isColumns, final int offset) {
+
 		if (axis == null)
 			return;
 		final Member[] prevMembers = new Member[axisInfo.getWidth()];
@@ -415,38 +390,25 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 			int yOffset = 0;
 			final List<Member> memberList = position.getMembers();
 			final Map<Dimension,List<Integer>> lvls = new HashMap<Dimension, List<Integer>>();
-			boolean stop = false;
 			for (int j = 0; j < memberList.size(); j++) {
 				Member member = memberList.get(j);
 				final AxisOrdinalInfo ordinalInfo = axisInfo.ordinalInfos.get(j);
 				List<Integer> depths = ordinalInfo.depths;
 				Collections.sort(depths);
 				lvls.put(member.getDimension(), depths);
-				if (member.getDepth() < Collections.max(depths)) {
-					stop = true;
-					if (isColumns) {
-						ignorex.add(i);
-					} else {
-						ignorey.add(i);
-					}
-					continue;
-				}
 				if (ordinalInfo.getDepths().size() > 0 && member.getDepth() < ordinalInfo.getDepths().get(0))
 					break;
 				final int y = yOffset + ordinalInfo.depths.indexOf(member.getDepth());
 				members[y] = member;
 				yOffset += ordinalInfo.getWidth();
 			}
-			if (stop) {
-				offset--;
-				continue;
-			}
+
 			boolean expanded = false;
 			boolean same = true;
 			for (int y = 0; y < members.length; y++) {
 				final FaoMemberCell memberInfo = new FaoMemberCell();
 				final Member member = members[y];
-				
+				expanded = false;
 				int index = memberList.indexOf(member);
 				if (index >= 0) {
 					final AxisOrdinalInfo ordinalInfo = axisInfo.ordinalInfos.get(index);
@@ -466,10 +428,12 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 					if (x - 1 == offset)
 						memberInfo.setLastRow(true);
 
-					matrix.setOffset(oldoffset);
+					matrix.setOffset(offset);
 					memberInfo.setRawValue(member.getCaption());
 					memberInfo.setFormattedValue(member.getCaption()); // First try to get a formatted value
 					memberInfo.setParentDimension(member.getDimension().getName());
+					memberInfo.setHierarchy(member.getHierarchy().getName());
+					memberInfo.setLevel(member.getLevel().getUniqueName());
 					memberInfo.setUniquename(member.getUniqueName());
 
 
@@ -549,7 +513,6 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 				}
 				int x_parent = isColumns ? x : y-1;
 				int y_parent = isColumns ? y-1 : x;
-				
 				if (index >= 0) {
 					final AxisOrdinalInfo ordinalInfo = axisInfo.ordinalInfos.get(index);
 					int depth_i = ordinalInfo.getDepths().indexOf(member.getDepth());
@@ -561,17 +524,23 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 							parent = parent.getParentMember();
 						}
 						final FaoMemberCell pInfo = new FaoMemberCell();
+
 						if(parent != null){
 							pInfo.setRawValue(parent.getCaption());
 							pInfo.setFormattedValue(parent.getCaption()); // First try to get a formatted value
 							pInfo.setParentDimension(parent.getDimension().getName());
+							pInfo.setHierarchy(parent.getHierarchy().getName());
+							pInfo.setLevel(parent.getLevel().getUniqueName());
 							pInfo.setUniquename(parent.getUniqueName());
 						}else{ // In case parent is null, leave field is blank
 							pInfo.setRawValue("");
 							pInfo.setFormattedValue("");
 							pInfo.setParentDimension("");
+							pInfo.setHierarchy("");
+							pInfo.setLevel("");
 							pInfo.setUniquename("");
 						}
+
 						matrix.set(x_parent, y_parent, pInfo);
 						if (isColumns) {
 							y_parent--;
@@ -585,7 +554,6 @@ public class FlattenedFaoCellSetFormatter implements ICellSetFormatter {
 				prevMemberInfo[y] = memberInfo;
 				members[y] = null;
 			}
-			
 		}
 	}
 }

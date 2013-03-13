@@ -53,5 +53,4 @@ public class FaoMemberCell extends MemberCell implements Serializable {
     public String getFaoProperty(String name){
         return faoProperties.get(name);
     }
-
 }

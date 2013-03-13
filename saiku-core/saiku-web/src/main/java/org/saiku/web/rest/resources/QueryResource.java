@@ -50,12 +50,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.saiku.olap.dto.SaikuCube;
 import org.saiku.olap.dto.SaikuDimensionSelection;
+import org.saiku.olap.dto.SaikuMember;
 import org.saiku.olap.dto.SaikuQuery;
 import org.saiku.olap.dto.SaikuTag;
-import org.saiku.olap.dto.SaikuMember;
 import org.saiku.olap.dto.resultset.CellDataSet;
 import org.saiku.olap.util.SaikuProperties;
 import org.saiku.olap.util.formatter.CellSetFormatter;
+import org.saiku.olap.util.formatter.FaoCellSetFormatter;
 import org.saiku.olap.util.formatter.FlattenedCellSetFormatter;
 import org.saiku.olap.util.formatter.FlattenedFaoCellSetFormatter;
 import org.saiku.olap.util.formatter.HierarchicalCellSetFormatter;
@@ -369,6 +370,9 @@ public class QueryResource {
 			if(formatter.equals("flat")) {
 				icf = new CellSetFormatter();
 			}
+			else if(formatter.equals("flat_fao")) {
+				icf = new FaoCellSetFormatter();
+			}
 			else if (formatter.equals("hierarchical")) {
 				icf = new HierarchicalCellSetFormatter();
 			}
@@ -379,13 +383,12 @@ public class QueryResource {
 				icf = new FlattenedFaoCellSetFormatter();
 			} 
 			else {
-
 				icf = new FlattenedCellSetFormatter();
 			}
 
 			olapQueryService.qm2mdx(queryName);
 
-			CellDataSet cs = olapQueryService.executeMdx(queryName,mdx, icf);
+			CellDataSet cs = olapQueryService.executeMdx(queryName, mdx, icf);
 			return RestUtil.convert(cs, limit);
 
 		}
