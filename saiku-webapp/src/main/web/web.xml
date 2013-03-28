@@ -24,11 +24,20 @@
 		<servlet-name>spring</servlet-name>
 		<url-pattern>/oauth/*</url-pattern>
 	</servlet-mapping>
-
+	
  	<listener>
 		<listener-class>
 			org.springframework.web.context.request.RequestContextListener
-</listener-class>
+		</listener-class>
 	</listener>
+	
+	<filter>
+    	<filter-name>LogFilter</filter-name>
+    	<filter-class>org.saiku.web.filter.LogFilter</filter-class>
+	</filter>
+	<filter-mapping>
+	    <filter-name>LogFilter</filter-name>
+	    <url-pattern>/rest/saiku/*</url-pattern>
+	</filter-mapping>
 
 </web-app>
