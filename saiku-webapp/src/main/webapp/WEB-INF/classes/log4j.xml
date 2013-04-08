@@ -58,12 +58,12 @@
    <!-- ========================================================= -->
    <!-- Configuration log to kibana console -->
    <!-- ========================================================= -->
-   
-   	<appender name="kibana" class="org.apache.log4j.ConsoleAppender">
-		<param name="Target" value="System.out" />
-		<layout class="org.apache.log4j.PatternLayout">
+	<appender name="kibana" class="org.apache.log4j.RollingFileAppender">
+	  <param name="File" value="../logs/kibana.log"/>
+      <param name="Append" value="true"/>
+      <layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{yyyy MMM dd HH:mm:ss,SSS} %-5p [%t] _KIBANA\t%X{node-name}\t%X{faodata-request-id}\t%X{action-code}\t%X{request-URI}\t%X{response-status-code}\t%X{service-elapsed-time}\t{%m}%n" />
-		</layout>
+	  </layout>
 	</appender>
 
 	<logger name="kibana" additivity="false">
