@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.olap4j.OlapConnection;
@@ -67,8 +68,21 @@ public class OlapMetaExplorer {
 	}
 
 	public SaikuConnection getConnection(String connectionName) throws SaikuOlapException {
+		
 		OlapConnection olapcon = connections.getOlapConnection(connectionName);
+		
+		// TODO: In case we have requested a connection in a language that does not exist
+		//		 the result is likely to be null.
+		//       We need a more robust approach for this use case !!!!
+		if (olapcon == null) {
+			log.warn("connection " + connectionName + " not found trying default language");
+			// FIXME: Currently hard coded to en but we have to use the default language in the catalog 
+			connectionName = connectionName.replaceFirst("(-\\ )([\\w]{2})", "- en");
+			olapcon = connections.getOlapConnection(connectionName);
+		}
+		
 		SaikuConnection connection = null;
+		
 		if (olapcon != null) {
 			List<SaikuCatalog> catalogs = new ArrayList<SaikuCatalog>();
 			try {
@@ -117,6 +131,7 @@ public class OlapMetaExplorer {
 			connection = new SaikuConnection(connectionName,catalogs);
 			return connection;
 		}
+	
 		throw new SaikuOlapException("Cannot find connection: (" + connectionName + ")");
 	}
 

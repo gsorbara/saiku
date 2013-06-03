@@ -26,6 +26,9 @@ import org.saiku.service.datasource.IDatasourceManager;
 import org.saiku.service.datasource.IDatasourceProcessor;
 import org.saiku.service.util.exception.SaikuServiceException;
 
+
+
+
 public abstract class AbstractConnectionManager implements IConnectionManager {
 
 
@@ -89,11 +92,16 @@ public abstract class AbstractConnectionManager implements IConnectionManager {
 
 	public ISaikuConnection getConnection(String name) {
 		SaikuDatasource datasource = ds.getDatasource(name);
-		datasource = preProcess(datasource);
 
-		ISaikuConnection con = getInternalConnection(name, datasource);
-		con = postProcess(datasource, con);
-		return con;
+		// FIXME: better handling of null in case the datasource is not found
+		if (datasource != null) {
+			datasource = preProcess(datasource);
+	
+			ISaikuConnection con = getInternalConnection(name, datasource);
+			con = postProcess(datasource, con);
+			return con;
+		}
+		return null;
 
 	}
 
