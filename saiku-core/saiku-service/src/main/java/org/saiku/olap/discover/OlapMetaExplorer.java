@@ -77,7 +77,7 @@ public class OlapMetaExplorer {
 		if (olapcon == null) {
 			log.warn("connection " + connectionName + " not found trying default language");
 			// FIXME: Currently hard coded to en but we have to use the default language in the catalog 
-			connectionName = connectionName.replaceFirst("(-\\ )([\\w]{2})", "- en");
+			connectionName = connectionName.replaceFirst("(-\\ )([\\w]{2})$", "- en");
 			olapcon = connections.getOlapConnection(connectionName);
 		}
 		
