@@ -10,6 +10,7 @@ import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.UUID;
 
 public class LogFilter implements Filter {
 
@@ -28,6 +29,10 @@ public class LogFilter implements Filter {
     	String clientIp = httpServletRequest.getRemoteAddr();
     	String queryString = httpServletRequest.getQueryString();
     	String referer = httpServletRequest.getHeader("Referer");
+    	String requestId = httpServletRequest.getHeader("faodata-request-id");
+    	
+    	if (requestId == null)
+    		requestId = UUID.randomUUID().toString(); 
 
     	if (isLogRequired(httpServletRequest, wrapResponse)) {	
 
@@ -39,7 +44,7 @@ public class LogFilter implements Filter {
 			MDC.put("port-number", Integer.toString(httpServletRequest.getServerPort()));
 			MDC.put("action-code", "SERVICE_REQUEST");
 			MDC.put("response-status-code", "0");
-			MDC.put("faodata-request-id", httpServletRequest.getHeader("faodata-request-id") + "");			
+			MDC.put("faodata-request-id", requestId + "");			
 			MDC.put("service-elapsed-time", "0");
 
 			String optional = String.format(
@@ -74,7 +79,7 @@ public class LogFilter implements Filter {
 			}
 			
 			MDC.put("response-status-code", Integer.toString(wrapResponse.getStatus()));
-			MDC.put("faodata-request-id", httpServletRequest.getHeader("faodata-request-id") + "");			
+			MDC.put("faodata-request-id", requestId + "");			
 			MDC.put("service-elapsed-time", Long.toString(elapsedTime));
 			
 			String optional = String.format(
