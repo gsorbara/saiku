@@ -28,8 +28,8 @@ public class LogFilter implements Filter {
     	String clientIp = httpServletRequest.getRemoteAddr();
     	String queryString = httpServletRequest.getQueryString();
     	String referer = httpServletRequest.getHeader("Referer");
-    	
-    	if( isLogRequired(httpServletRequest, wrapResponse) ){	
+
+    	if (isLogRequired(httpServletRequest, wrapResponse)) {	
 
 			MDC.put("request-URI", httpServletRequest.getRequestURL().toString());
 			MDC.put("remote-address", httpServletRequest.getRemoteAddr() + "");
@@ -58,7 +58,7 @@ public class LogFilter implements Filter {
 		
 		// Check if condition match, in order to print log to kibana
 		//
-		if( isLogRequired(httpServletRequest, wrapResponse) ){	
+		if (isLogRequired(httpServletRequest, wrapResponse)) {	
 			
 			MDC.put("request-URI", httpServletRequest.getRequestURL().toString());
 			MDC.put("remote-address", httpServletRequest.getRemoteAddr() + "");
@@ -89,14 +89,14 @@ public class LogFilter implements Filter {
     }
     
     private boolean isLogRequired(HttpServletRequest request, StatusWrapperServletResponse reponse){ 
-    	int responseCode = reponse.getStatus();
+
     	String requestUrl = request.getRequestURL().toString();
     	
-    	// Check if this is sanity check call and response code is 200
+    	// Check if this is sanity check call 
     	//
-    	if( requestUrl.toLowerCase().matches(".+/sanitycheck") && ( responseCode== 200)){
+    	if (requestUrl.toLowerCase().matches(".+/sanitycheck"))
     		return false;
-    	}    	
+
     	return true;
     }
 
