@@ -28,6 +28,29 @@ public class LogFilter implements Filter {
     	String clientIp = httpServletRequest.getRemoteAddr();
     	String queryString = httpServletRequest.getQueryString();
     	String referer = httpServletRequest.getHeader("Referer");
+    	
+    	if( isLogRequired(httpServletRequest, wrapResponse) ){	
+
+			MDC.put("request-URI", httpServletRequest.getRequestURL().toString());
+			MDC.put("remote-address", httpServletRequest.getRemoteAddr() + "");
+			MDC.put("method", httpServletRequest.getMethod() + "");
+			//MDC.put("node-name", httpServletRequest.getServerName());
+			MDC.put("node-name", InetAddress.getLocalHost().getHostName() + "");
+			MDC.put("port-number", Integer.toString(httpServletRequest.getServerPort()));
+			MDC.put("action-code", "SERVICE_REQUEST");
+			MDC.put("response-status-code", "0");
+			MDC.put("faodata-request-id", httpServletRequest.getHeader("faodata-request-id") + "");			
+			MDC.put("service-elapsed-time", "0");
+
+			String optional = String.format(
+					"_CHANNEL=%s, _CLIENT_IP=%s, _QUERY_STRING=%s, _REFERRER=%s",
+					channel,
+					clientIp,
+					queryString, 
+					referer);
+			logger.info( optional );		
+			MDC.clear();				
+    	}
 
 		filterChain.doFilter(request, wrapResponse);	
 		
@@ -43,7 +66,13 @@ public class LogFilter implements Filter {
 			//MDC.put("node-name", httpServletRequest.getServerName());
 			MDC.put("node-name", InetAddress.getLocalHost().getHostName() + "");
 			MDC.put("port-number", Integer.toString(httpServletRequest.getServerPort()));
-			MDC.put("action-code", "SERVICE_REQUEST");
+			
+			if (wrapResponse.getStatus() < 400) {
+				MDC.put("action-code", "SERVICE_RESPONSE");
+			} else {
+				MDC.put("action-code", "SERVICE_ERROR");
+			}
+			
 			MDC.put("response-status-code", Integer.toString(wrapResponse.getStatus()));
 			MDC.put("faodata-request-id", httpServletRequest.getHeader("faodata-request-id") + "");			
 			MDC.put("service-elapsed-time", Long.toString(elapsedTime));
