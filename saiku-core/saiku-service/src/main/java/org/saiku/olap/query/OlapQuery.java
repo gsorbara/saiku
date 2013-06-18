@@ -44,6 +44,7 @@ import org.saiku.olap.util.SaikuProperties;
 import org.saiku.olap.util.exception.SaikuOlapException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class OlapQuery implements IQuery {
 
@@ -210,7 +211,10 @@ public class OlapQuery implements IQuery {
 
     	//SDW-209 for create statement 
     	String mdxString = getMdx();
+
+    	MDC.put("mdx-string", mdxString);
     	log.debug("Executing query (" + this.getName() + ") :\n" + mdxString);
+    	
     	final Catalog catalog = query.getCube().getSchema().getCatalog();
         this.connection.setCatalog(catalog.getName());
 		OlapStatement stmt = connection.createStatement();
@@ -225,6 +229,7 @@ public class OlapQuery implements IQuery {
     		dimension.getInclusions().clear();
     		moveDimension(dimension, null);
     	}
+
     	
         return cellSet;
     }

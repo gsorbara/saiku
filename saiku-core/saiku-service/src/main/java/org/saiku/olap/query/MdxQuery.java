@@ -40,6 +40,7 @@ import org.olap4j.type.CubeType;
 import org.saiku.olap.dto.SaikuCube;
 import org.saiku.olap.dto.SaikuTag;
 import org.saiku.olap.util.exception.SaikuOlapException;
+import org.slf4j.MDC;
 
 public class MdxQuery implements IQuery {
 
@@ -115,10 +116,13 @@ public class MdxQuery implements IQuery {
     }
 
 	public CellSet execute() throws Exception {
+
+    	MDC.put("mdx-string", mdx);
+
 		OlapConnection con = connection;
 		con.setCatalog(getSaikuCube().getCatalogName());
 		OlapStatement stmt = con.createStatement();
-		
+	
 		this.statement = stmt;
 		CellSet cs = stmt.executeOlapQuery(mdx);
 		if (statement != null) {

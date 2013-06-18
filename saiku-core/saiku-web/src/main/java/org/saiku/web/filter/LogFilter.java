@@ -30,7 +30,7 @@ public class LogFilter implements Filter {
     	String queryString = httpServletRequest.getQueryString();
     	String referer = httpServletRequest.getHeader("Referer");
     	String requestId = httpServletRequest.getHeader("faodata-request-id");
-    	
+   	
     	if (requestId == null)
     		requestId = UUID.randomUUID().toString(); 
 
@@ -82,12 +82,16 @@ public class LogFilter implements Filter {
 			MDC.put("faodata-request-id", requestId + "");			
 			MDC.put("service-elapsed-time", Long.toString(elapsedTime));
 			
+	    	String mdxString = MDC.get("mdx-string");
+			
 			String optional = String.format(
-					"_CHANNEL=%s, _CLIENT_IP=%s, _QUERY_STRING=%s, _REFERRER=%s",
+					"_CHANNEL=%s, _CLIENT_IP=%s, _QUERY_STRING=%s, _REFERRER=%s, _MDXSTRING=%s",
 					channel,
 					clientIp,
 					queryString, 
-					referer);
+					referer,
+					mdxString);
+			
 			logger.info( optional );		
 			MDC.clear();		
 		}
