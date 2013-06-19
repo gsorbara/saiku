@@ -82,7 +82,7 @@ public class LogFilter implements Filter {
 			MDC.put("faodata-request-id", requestId + "");			
 			MDC.put("service-elapsed-time", Long.toString(elapsedTime));
 			
-	    	String mdxString = MDC.get("mdx-string");
+	    	String mdxString = MDC.get("mdx-string").replaceAll("[\\r\\n]", "");
 			
 			String optional = String.format(
 					"_CHANNEL=%s, _CLIENT_IP=%s, _QUERY_STRING=%s, _REFERRER=%s, _MDXSTRING=%s",
