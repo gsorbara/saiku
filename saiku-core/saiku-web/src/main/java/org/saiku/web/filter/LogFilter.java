@@ -85,7 +85,7 @@ public class LogFilter implements Filter {
 	    	String mdxString = MDC.get("mdx-string");
 	    	
 	    	if (mdxString != null) {
-	    		mdxString = mdxString.replaceAll("[\\r\\n]", "");
+	    		mdxString = mdxString.replaceAll("[\\r\\n]", " ");
 	    	}
 			
 			String optional = String.format(
