@@ -57,12 +57,16 @@
 			<properties> <property name="threadNamePrefix" value="ReplicationQueueThread"/> 
 			</properties> </replicationQueueScheduledExecutor> -->
 
+
+
+
 		<!-- Enables collection of global JMX statistics, and allows you to customize 
 			the JMX domain name under which MBeans are registered. -->
 		<!-- change [false] by MENGRAN for junit test -->
-		
 <!-- 		<globalJmxStatistics enabled="false" jmxDomain="org.infinispan"  -->
 <!-- 			cacheManagerName="mondrianCacheManager" /> -->
+
+
 
 		<!-- If the transport is omitted, there is no way to create distributed 
 			or clustered caches. There is no added cost to defining a transport and not 
