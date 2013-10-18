@@ -63,9 +63,8 @@
 		<!-- Enables collection of global JMX statistics, and allows you to customize 
 			the JMX domain name under which MBeans are registered. -->
 		<!-- change [false] by MENGRAN for junit test -->
-<!-- 		<globalJmxStatistics enabled="false" jmxDomain="org.infinispan"  -->
-<!-- 			cacheManagerName="mondrianCacheManager" /> -->
-
+		<globalJmxStatistics  enabled="false" jmxDomain="org.infinispan" 
+			cacheManagerName="mondrianCacheManager" allowDuplicateDomains="true" />
 
 
 		<!-- If the transport is omitted, there is no way to create distributed 
