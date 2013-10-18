@@ -24,13 +24,6 @@
 			<url>http://hqldvtcdrci1.hq.un.fao.org:8081/artifactory/libs-release-local</url>
 		</repository>
 
-		<!-- INFINISPAN CACHE -->
-		<repository>
-			<id>jboss-releases</id>
-			<url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
-		</repository>
-		<!-- INFINISPAN CACHE -->
-
 	</repositories>
 
 
