@@ -130,12 +130,17 @@
 	</build>
 
 	<dependencies>
-	
+
 		<!-- INFINISPAN CACHE -->
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>staxmapper</artifactId>
 			<version>1.1.0.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-core</artifactId>
+			<version>5.3.0.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
