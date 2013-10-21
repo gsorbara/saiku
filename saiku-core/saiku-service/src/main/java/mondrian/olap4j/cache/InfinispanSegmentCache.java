@@ -29,18 +29,12 @@ public class InfinispanSegmentCache extends MemorySegmentCache implements
 		super();
 
 		SpringEmbeddedCacheManagerFactoryBean factoryBean = new SpringEmbeddedCacheManagerFactoryBean();
-		System.out.println("NICK: mondrian-infinispan-config.xml initialization..");
 		factoryBean.setConfigurationFileLocation(new ClassPathResource(
 				"mondrian-infinispan-config.xml"));
-		System.out.println("NICK: mondrian-infinispan-config.xml initialized.");
 
 		try {
-			System.out.println("NICK: factoryBean afterPropertiesSet()...");
 			factoryBean.afterPropertiesSet();
-			System.out.println("NICK: factoryBean afterPropertiesSet() done.");
-			System.out.println("NICK: factoryBean.getObject()...");
 			springEmbeddedCacheManager = factoryBean.getObject();
-			System.out.println("NICK: factoryBean.getObject() done.");
 
 			LOGGER.info("Infinispan initializing...");
 			// Initialize cache
