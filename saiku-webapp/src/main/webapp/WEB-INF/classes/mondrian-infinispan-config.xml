@@ -83,7 +83,7 @@
 
 		<transport clusterName="mondrian-cluster"
 			transportClass="org.infinispan.remoting.transport.jgroups.JGroupsTransport"
-			nodeName="nick">
+			nodeName="node-1">
 			<properties>
 				<property name="configurationFile" value="jgroups-tcp.xml" />
 			</properties>
