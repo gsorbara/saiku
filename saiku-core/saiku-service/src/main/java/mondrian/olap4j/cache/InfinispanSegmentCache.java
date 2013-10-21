@@ -9,6 +9,7 @@ import mondrian.spi.SegmentHeader;
 
 import org.infinispan.spring.provider.SpringEmbeddedCacheManager;
 import org.infinispan.spring.provider.SpringEmbeddedCacheManagerFactoryBean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache.ValueWrapper;
@@ -25,15 +26,21 @@ public class InfinispanSegmentCache extends MemorySegmentCache implements
 	public static final String DEFAULT_CACHE_NAME = "default";
 
 	public InfinispanSegmentCache() {
-
 		super();
 
 		SpringEmbeddedCacheManagerFactoryBean factoryBean = new SpringEmbeddedCacheManagerFactoryBean();
+		System.out.println("NICK: mondrian-infinispan-config.xml initialization..");
 		factoryBean.setConfigurationFileLocation(new ClassPathResource(
 				"mondrian-infinispan-config.xml"));
+		System.out.println("NICK: mondrian-infinispan-config.xml initialized.");
+
 		try {
+			System.out.println("NICK: factoryBean afterPropertiesSet()...");
 			factoryBean.afterPropertiesSet();
+			System.out.println("NICK: factoryBean afterPropertiesSet() done.");
+			System.out.println("NICK: factoryBean.getObject()...");
 			springEmbeddedCacheManager = factoryBean.getObject();
+			System.out.println("NICK: factoryBean.getObject() done.");
 
 			LOGGER.info("Infinispan initializing...");
 			// Initialize cache
