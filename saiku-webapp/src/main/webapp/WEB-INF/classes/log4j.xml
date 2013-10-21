@@ -13,7 +13,6 @@
  -->
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
-
    <!-- ================================= -->
    <!-- Preserve messages in a local file -->
    <!-- ================================= -->
@@ -66,7 +65,7 @@
 	  </layout>
 	</appender>
 
-	<logger name="kibana" additivity="false">
+	<logger name="kibanaLogger" additivity="false">
 		<level value="INFO"/>
 		<appender-ref ref="kibana" />
 	</logger>
