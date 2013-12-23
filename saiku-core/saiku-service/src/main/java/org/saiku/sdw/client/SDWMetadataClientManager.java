@@ -74,13 +74,13 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					Node status = XMLUtil.queryNode(doc, "(//Workspace/status)["+i+"]");
 					
 					Workspace workspace = new Workspace();
-					if(caption != null)workspace.setCaption(caption.getFirstChild().getNodeValue());
-					if(description != null)workspace.setDescription(description.getFirstChild().getNodeValue());
-					if(name != null)workspace.setName(name.getFirstChild().getNodeValue());
-					if(published != null)workspace.setPublished(Boolean.parseBoolean(published.getFirstChild().getNodeValue()));
-					if(status != null)workspace.setStatus(status.getFirstChild().getNodeValue());
-					if(uuid != null)workspace.setUuid(uuid.getFirstChild().getNodeValue());
-					if(visible != null)workspace.setVisible(Boolean.parseBoolean(visible.getFirstChild().getNodeValue()));
+					if(caption != null)workspace.setCaption(caption.getTextContent());
+					if(description != null)workspace.setDescription(description.getTextContent());
+					if(name != null)workspace.setName(name.getTextContent());
+					if(published != null)workspace.setPublished(Boolean.parseBoolean(published.getTextContent()));
+					if(status != null)workspace.setStatus(status.getTextContent());
+					if(uuid != null)workspace.setUuid(uuid.getTextContent());
+					if(visible != null)workspace.setVisible(Boolean.parseBoolean(visible.getTextContent()));
 					list.add(workspace);
 				}
 				return workspaces;
@@ -121,11 +121,11 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					Node status = XMLUtil.queryNode(doc, "(//Catalog/status)["+i+"]");
 					
 					Catalog catalog = new Catalog();
-					if(name != null)catalog.setName(name.getFirstChild().getNodeValue());
-					if(published != null)catalog.setPublished(Boolean.parseBoolean(published.getFirstChild().getNodeValue()));
-					if(status != null)catalog.setStatus(status.getFirstChild().getNodeValue());
-					if(uuid != null)catalog.setUuid(uuid.getFirstChild().getNodeValue());
-					if(visible != null)catalog.setVisible(Boolean.parseBoolean(visible.getFirstChild().getNodeValue()));
+					if(name != null)catalog.setName(name.getTextContent());
+					if(published != null)catalog.setPublished(Boolean.parseBoolean(published.getTextContent()));
+					if(status != null)catalog.setStatus(status.getTextContent());
+					if(uuid != null)catalog.setUuid(uuid.getTextContent());
+					if(visible != null)catalog.setVisible(Boolean.parseBoolean(visible.getTextContent()));
 					list.add(catalog);
 				}
 				return catalogs;
@@ -165,14 +165,14 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 				Node username = XMLUtil.queryNode(doc, "//username");
 				Node password = XMLUtil.queryNode(doc, "//password");
 				
-				if(caption != null)connection.setCaption(caption.getFirstChild().getNodeValue());
-				if(description != null)connection.setDescription(description.getFirstChild().getNodeValue());
-				if(driver != null)connection.setDriver(driver.getFirstChild().getNodeValue());
-				if(name != null)connection.setName(name.getFirstChild().getNodeValue());
-				if(password != null)connection.setPassword(password.getFirstChild().getNodeValue());
-				if(url != null)connection.setUrl(url.getFirstChild().getNodeValue());
-				if(username != null)connection.setUsername(username.getFirstChild().getNodeValue());
-				if(uuid != null)connection.setUuid(uuid.getFirstChild().getNodeValue());
+				if(caption != null)connection.setCaption(caption.getTextContent());
+				if(description != null)connection.setDescription(description.getTextContent());
+				if(driver != null)connection.setDriver(driver.getTextContent());
+				if(name != null)connection.setName(name.getTextContent());
+				if(password != null)connection.setPassword(password.getTextContent());
+				if(url != null)connection.setUrl(url.getTextContent());
+				if(username != null)connection.setUsername(username.getTextContent());
+				if(uuid != null)connection.setUuid(uuid.getTextContent());
 				
 				return connection;
 				
@@ -214,14 +214,14 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					Node password = XMLUtil.queryNode(doc, "(//Connection/password)["+i+"]");
 					
 					Connection connection = new Connection();
-					if(caption != null)connection.setCaption(caption.getFirstChild().getNodeValue());
-					if(description != null)connection.setDescription(description.getFirstChild().getNodeValue());
-					if(driver != null)connection.setDriver(driver.getFirstChild().getNodeValue());
-					if(name != null)connection.setName(name.getFirstChild().getNodeValue());
-					if(password != null)connection.setPassword(password.getFirstChild().getNodeValue());
-					if(url != null)connection.setUrl(url.getFirstChild().getNodeValue());
-					if(username != null)connection.setUsername(username.getFirstChild().getNodeValue());
-					if(uuid != null)connection.setUuid(uuid.getFirstChild().getNodeValue());
+					if(caption != null)connection.setCaption(caption.getTextContent());
+					if(description != null)connection.setDescription(description.getTextContent());
+					if(driver != null)connection.setDriver(driver.getTextContent());
+					if(name != null)connection.setName(name.getTextContent());
+					if(password != null)connection.setPassword(password.getTextContent());
+					if(url != null)connection.setUrl(url.getTextContent());
+					if(username != null)connection.setUsername(username.getTextContent());
+					if(uuid != null)connection.setUuid(uuid.getTextContent());
 					list.add(connection);
 				}
 				return connections;
@@ -268,16 +268,16 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					Node connectionName = XMLUtil.queryNode(doc, "(//Schema/connectionName)["+i+"]");
 					
 					Schema schema = new Schema();
-					if(connectionName != null)schema.setConnectionName(connectionName.getFirstChild().getNodeValue());
-					if(defaultDescription != null)schema.setDefaultDescription(defaultDescription.getFirstChild().getNodeValue());
-					if(defaultLanguage != null)schema.setDefaultLanguage(defaultLanguage.getFirstChild().getNodeValue());
-					if(fileName != null)schema.setFileName(fileName.getFirstChild().getNodeValue());
-					if(name != null)schema.setName(name.getFirstChild().getNodeValue());
-					if(published != null)schema.setPublished(Boolean.parseBoolean(published.getFirstChild().getNodeValue()));
-					if(status != null)schema.setStatus(status.getFirstChild().getNodeValue());
-					if(uuid != null)schema.setUuid(uuid.getFirstChild().getNodeValue());
-					if(version != null)schema.setVersion(Integer.parseInt(version.getFirstChild().getNodeValue()));
-					if(visible != null)schema.setVisible(Boolean.parseBoolean(visible.getFirstChild().getNodeValue()));
+					if(connectionName != null)schema.setConnectionName(connectionName.getTextContent());
+					if(defaultDescription != null)schema.setDefaultDescription(defaultDescription.getTextContent());
+					if(defaultLanguage != null)schema.setDefaultLanguage(defaultLanguage.getTextContent());
+					if(fileName != null)schema.setFileName(fileName.getTextContent());
+					if(name != null)schema.setName(name.getTextContent());
+					if(published != null)schema.setPublished(Boolean.parseBoolean(published.getTextContent()));
+					if(status != null)schema.setStatus(status.getTextContent());
+					if(uuid != null)schema.setUuid(uuid.getTextContent());
+					if(version != null)schema.setVersion(Integer.parseInt(version.getTextContent()));
+					if(visible != null)schema.setVisible(Boolean.parseBoolean(visible.getTextContent()));
 					list.add(schema);
 				}
 				return schemas;
@@ -347,13 +347,13 @@ public class SDWMetadataClientManager extends SDWClientAbstract{
 					
 					SchemaLanguage schemaLanguage = new SchemaLanguage();
 					if(language != null)
-						schemaLanguage.setLanguage(language.getFirstChild().getNodeValue());
+						schemaLanguage.setLanguage(language.getTextContent());
 					if(xml != null)
-						schemaLanguage.setXml(xml.getFirstChild().getNodeValue());
+						schemaLanguage.setXml(xml.getTextContent());
 					if(fileName != null)
-						schemaLanguage.setFileName(fileName.getFirstChild().getNodeValue());
+						schemaLanguage.setFileName(fileName.getTextContent());
 					
-					if(enabled != null && Boolean.parseBoolean(enabled.getFirstChild().getNodeValue()))					
+					if(enabled != null && Boolean.parseBoolean(enabled.getTextContent()))					
 						list.add(schemaLanguage);
 				}
 				return schemaLanguages;
