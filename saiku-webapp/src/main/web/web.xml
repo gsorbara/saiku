@@ -16,6 +16,24 @@
 		<filter-class>org.saiku.web.filter.LogFilter</filter-class>
 	</filter>
 
+	<filter>
+		<filter-name>jsonp</filter-name>
+		<filter-class>org.jsonp.JsonpFilter</filter-class>
+		<init-param>
+			<param-name>jsonp</param-name>
+			<param-value>jsonpCallback</param-value>
+		</init-param>
+		<init-param>
+			<param-name>json-mime-types</param-name>
+			<param-value>application/json</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>jsonp</filter-name>
+		<url-pattern>*</url-pattern>
+	</filter-mapping>
+
 	<filter-mapping>
 		<filter-name>LogFilter</filter-name>
 		<url-pattern>/rest/saiku/*</url-pattern>
@@ -41,5 +59,11 @@
 		<servlet-name>spring</servlet-name>
 		<url-pattern>/oauth/*</url-pattern>
 	</servlet-mapping>
+
+	<mime-mapping>
+		<extension>json</extension>
+		<mime-type>application/json</mime-type>
+	</mime-mapping>
+
 
 </web-app>
