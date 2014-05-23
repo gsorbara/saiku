@@ -61,14 +61,12 @@
 			<name>Spring Portfolio Snapshot Repository</name>
 			<url>http://s3.amazonaws.com/maven.springframework.org/snapshot</url>
 		</repository>
-
 		<!-- INFINISPAN CACHE -->
 		<repository>
 			<id>jboss-releases</id>
 			<url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
 		</repository>
 		<!-- INFINISPAN CACHE -->
-
 	</repositories>
 
 	<build>
