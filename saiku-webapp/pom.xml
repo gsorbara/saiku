@@ -17,6 +17,16 @@
 		<jersey.version>1.11</jersey.version>
 	</properties>
 
+	<repositories>
+
+		<repository>
+			<id>Artifactory-DEV-snapshots</id>
+			<name>Artifactory-DEV-snapshots</name>
+			<url>http://hqldvtcdrci1.hq.un.fao.org:8081/artifactory/libs-snapshot-local</url>
+		</repository>
+
+	</repositories>
+
 	<profiles>
 		<profile>
 			<id>env-dev</id>
@@ -460,6 +470,13 @@
 			<version>2.1</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.jsonp</groupId>
+			<artifactId>jsonp</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
 	</dependencies>
 	<reporting>
 		<plugins>
