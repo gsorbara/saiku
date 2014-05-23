@@ -18,11 +18,11 @@
 			<url>http://hqldvtcdrci1.hq.un.fao.org:8081/artifactory/libs-snapshot-local</url>
 		</repository>
 
-		<repository>
-			<id>Artifactory-DEV-releases</id>
-			<name>Artifactory-DEV-releases</name>
-			<url>http://hqldvtcdrci1.hq.un.fao.org:8081/artifactory/libs-release-local</url>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>Artifactory-DEV-releases</id> -->
+<!-- 			<name>Artifactory-DEV-releases</name> -->
+<!-- 			<url>http://hqldvtcdrci1.hq.un.fao.org:8081/artifactory/libs-release-local</url> -->
+<!-- 		</repository> -->
 
 	</repositories>
 
