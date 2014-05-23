@@ -17,16 +17,6 @@
 		<jersey.version>1.11</jersey.version>
 	</properties>
 
-	<repositories>
-
-		<repository>
-			<id>Artifactory-DEV-snapshots</id>
-			<name>Artifactory-DEV-snapshots</name>
-			<url>http://hqldvtcdrci1.hq.un.fao.org:8081/artifactory/libs-snapshot-local</url>
-		</repository>
-
-	</repositories>
-
 	<profiles>
 		<profile>
 			<id>env-dev</id>
