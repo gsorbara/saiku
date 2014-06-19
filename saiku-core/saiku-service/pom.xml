@@ -86,7 +86,7 @@
 
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -181,7 +181,8 @@
 			<artifactId>mondrian</artifactId>
 			<!--<version>3.3.1.14852</version> -->
 			<!--<version>TRUNK-SNAPSHOT</version> -->
-			<version>3.5.4</version>
+			<!--   <version>3.5.4</version> -->
+			<version>3.6.7</version>
 			<exclusions>
 				<exclusion>
 					<groupId>javax.servlet</groupId>
@@ -197,22 +198,26 @@
 		<dependency>
 			<groupId>eigenbase</groupId>
 			<artifactId>eigenbase-properties</artifactId>
-			<version>1.1.0.10924</version>
+			<!--  <version>1.1.0.10924</version>  -->
+			<version>1.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>eigenbase</groupId>
 			<artifactId>eigenbase-resgen</artifactId>
-			<version>1.3.0.11873</version>
+			<!--  <version>1.3.0.11873</version> -->
+			<version>1.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>eigenbase</groupId>
 			<artifactId>eigenbase-xom</artifactId>
-			<version>1.3.0.11999</version>
+			<!-- <version>1.3.0.11999</version> -->
+			<version>1.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.olap4j</groupId>
 			<artifactId>olap4j-xmla</artifactId>
-			<version>1.2.0-SNAPSHOT</version>
+			<!-- <version>1.2.0-SNAPSHOT</version> -->
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jdom</groupId>
